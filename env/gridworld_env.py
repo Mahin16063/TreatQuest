@@ -1,6 +1,7 @@
 import os
 import pygame
 
+ACTIONS = ["UP", "DOWN", "LEFT", "RIGHT"]
 
 class GridWorldEnv:
     TILE_SIZE = 64
@@ -176,3 +177,18 @@ class GridWorldEnv:
             self.pet_surface,
             (self.pet_pos[1] * self.TILE_SIZE, self.pet_pos[0] * self.TILE_SIZE),
         )
+
+    def __init__q_table(env):
+        """
+        Initializes a Q-table for the environment.
+        The Q-table starts with all zeros.
+        """
+        q_table = {}
+        rows = len(env.grid)
+        cols = len(env.grid[0])
+
+        for r in range(rows):
+            for c in range(cols):
+                state = (r,c)
+                q_table[state] = {a: 0.0 for a in ACTIONS}
+        return q_table
