@@ -1,4 +1,5 @@
 from env.gridworld_env import ACTIONS
+import random
 
 
 def __init__q_table(env):
@@ -15,4 +16,20 @@ def __init__q_table(env):
             state = (r,c)
             q_table[state] = {a: 0.0 for a in ACTIONS}
     return q_table
+
+def choose_action(q_table, state, epsilon):
+    """
+    Kitty chooses an action based on the current Q-values 
+    in the current state.
+    Employs epsilon-greedy strategy.
+    """
+    current_options = q_table[state]
+    
+    if random.random() < epsilon:
+        return random.choice(ACTIONS)
+    else:
+        max_q = max(current_options.values())
+        best_actions = [a for a, q in current_options.items() if q == max_q]
+        return random.choice(best_actions)
+
 
