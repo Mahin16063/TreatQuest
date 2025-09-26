@@ -24,7 +24,7 @@ def choose_action(q_table, state, epsilon):
     Employs epsilon-greedy strategy.
     """
     current_options = q_table[state]
-    
+
     if random.random() < epsilon:
         return random.choice(ACTIONS)
     else:
@@ -32,4 +32,4 @@ def choose_action(q_table, state, epsilon):
         best_actions = [a for a, q in current_options.items() if q == max_q]
         return random.choice(best_actions)
 
-
+def update_q_value(q_table, state, action, reward, next_state, alpha, gamma):
