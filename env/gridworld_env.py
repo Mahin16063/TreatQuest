@@ -153,23 +153,21 @@ class GridWorldEnv:
             print(line)
 
     def render_pygame(self, screen):
-        for r, row in enumerate(self.grid):
-            for c, ch in enumerate(row):
-                tile = self.tile_surfaces.get(ch)
+        rows = len(self.grid)
+        cols = len(self.grid[0])
 
-                if tile is None and ch != "P":
-                    raise ValueError(
-                        f"Unrecognized tile character '{ch}' at row {r}, col {c}"
-                    )
+        for r in range(rows):
+            for c in range(cols):
+                # Always draw background first
+                bg_tile = self.tile_surfaces["."]
+                screen.blit(bg_tile, (c * self.TILE_SIZE, r * self.TILE_SIZE))
 
-                if tile:
-                    screen.blit(tile, (c * self.TILE_SIZE, r * self.TILE_SIZE))
-
-        # Draw objects
-        for (r, c), obj in self.objects.items():
-            tile = self.tile_surfaces.get(obj)
-            if tile:
-                screen.blit(tile, (c * self.TILE_SIZE, r * self.TILE_SIZE))
+                # Draw foreground objects if present
+                if (r, c) in self.objects:
+                    obj = self.objects[(r, c)]
+                    tile = self.tile_surfaces.get(obj)
+                    if tile:
+                        screen.blit(tile, (c * self.TILE_SIZE, r * self.TILE_SIZE))
 
         # Draw pet
         screen.blit(
