@@ -47,7 +47,7 @@ class GridWorldEnv:
             ".": self._safe_load("tiles", "tile_4.png"),
             "P": None,  # Pet drawn separately
         }
-        self.pet_surface = self._safe_load("pets", "pet.png")
+        self.pet_surface = self._safe_load("pets", "orange-cat.png")
 
     # ----------------------------
     # Map loading
