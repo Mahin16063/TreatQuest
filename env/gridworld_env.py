@@ -1,6 +1,7 @@
 import os
 import pygame
 
+ACTIONS = ["UP", "DOWN", "LEFT", "RIGHT"]
 
 class GridWorldEnv:
     TILE_SIZE = 64
@@ -174,3 +175,4 @@ class GridWorldEnv:
             self.pet_surface,
             (self.pet_pos[1] * self.TILE_SIZE, self.pet_pos[0] * self.TILE_SIZE),
         )
+   
