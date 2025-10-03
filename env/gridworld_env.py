@@ -112,8 +112,10 @@ class GridWorldEnv:
         elif action == "DOWN":
             dr, dc = 1, 0
         elif action == "LEFT":
+            self.pet_surface = self._safe_load("pets", "orange-cat-left.png")
             dr, dc = 0, -1
         elif action == "RIGHT":
+            self.pet_surface = self._safe_load("pets", "orange-cat.png")
             dr, dc = 0, 1
 
         nr, nc = self.pet_pos[0] + dr, self.pet_pos[1] + dc
