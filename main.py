@@ -1,5 +1,6 @@
 import pygame
 from env.gridworld_env import GridWorldEnv
+from q_table import QLearningAgent
 
 def main():
     pygame.init()

@@ -1,6 +1,6 @@
 import os
 import pygame
-from q_table import QLearningAgent
+
 
 ACTIONS = ["UP", "DOWN", "LEFT", "RIGHT"]
 
