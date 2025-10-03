@@ -17,8 +17,17 @@ class GridWorldEnv:
         self.tile_surfaces = {}
         self.objects = {}
         self.remaining_treats = 0
-
         self._load_assets()
+        self.total_treats = 0
+        self.collected_treats = 0
+
+     #Function to get number of remaining treats
+    def get_treat_count(self):
+        return self.remaining_treats
+    
+    def get_total_treats(self):
+        "Return total treats in the level"
+        return self.total_treats
 
     # ----------------------------
     # Helper functions
@@ -83,6 +92,9 @@ class GridWorldEnv:
                     self.objects[(r, c)] = "X"
                 elif ch == "#":
                     self.objects[(r, c)] = "#"
+        
+        #Store total treats at this level
+        self.total_treats = self.remaining_treats  
 
     # ----------------------------
     # Environment API
@@ -170,6 +182,51 @@ class GridWorldEnv:
                     tile = self.tile_surfaces.get(obj)
                     if tile:
                         screen.blit(tile, (c * self.TILE_SIZE, r * self.TILE_SIZE))
+
+
+    def render_ui(self, screen):
+        total_treats = self.get_total_treats()   # total in level
+        collected = total_treats - self.remaining_treats  # already picked up
+
+        # Apple icon
+        apple_icon = pygame.transform.scale(self.tile_surfaces["T"], (32, 32))
+        screen.blit(apple_icon, (10, 10))
+
+        # Counter text
+        font = pygame.font.Font(None, 36)
+        counter_text = f"{collected}/{total_treats}"
+        text_surface = font.render(counter_text, True, (255, 255, 255))
+        screen.blit(text_surface, (50, 15))
+
+        # Progress bar background
+        bar_width = 200
+        bar_height = 20
+        bar_x = 10
+        bar_y = 50
+        pygame.draw.rect(screen, (50, 50, 50), (bar_x, bar_y, bar_width, bar_height))
+
+        # Progress fill
+        if total_treats > 0:
+            progress = collected / total_treats
+            fill_width = int(bar_width * progress)
+            if fill_width > 0:
+                if progress < 0.5:
+                    color = (255, 100, 100)  # red
+                elif progress < 1.0:
+                    color = (255, 255, 100)  # yellow
+                else:
+                    color = (100, 255, 100)  # green
+
+                pygame.draw.rect(screen, color, (bar_x, bar_y, fill_width, bar_height))
+
+        # Progress bar border
+        pygame.draw.rect(screen, (255, 255, 255), (bar_x, bar_y, bar_width, bar_height), 2)
+
+        # Completion message
+        if collected == total_treats and total_treats > 0:
+            complete_font = pygame.font.Font(None, 24)
+            complete_text = complete_font.render("All treats collected!", True, (100, 255, 100))
+            screen.blit(complete_text, (bar_x, bar_y + 25))
 
         # Draw pet
         screen.blit(
