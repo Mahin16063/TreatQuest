@@ -1,1 +1,1 @@
-from qagent import QAgent
+from .qagent import QAgent

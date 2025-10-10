@@ -1,6 +1,7 @@
 .vs
 .vscode
 .venv
+Q.npy
 __pycache__
 env/__pycache__/
 levels/__pycache__/
