@@ -25,8 +25,8 @@ class GridWorldEnv:
     def get_treat_count(self):
         return self.remaining_treats
     
+    #Function to get total number of treats in level
     def get_total_treats(self):
-        "Return total treats in the level"
         return self.total_treats
 
     # ----------------------------
