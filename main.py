@@ -8,6 +8,7 @@ from env.q_table import QLearningAgent
 
 def main():
     pygame.init()
+    pygame.mixer.init()
 
     # Get screen size
     info = pygame.display.Info()
