@@ -1,9 +1,11 @@
 import os
 import pygame
 from levels.levelAssets import Levels
-#from q_table import QLearningAgent
+
+# from q_table import QLearningAgent
 
 ACTIONS = ["UP", "DOWN", "LEFT", "RIGHT"]
+
 
 class GridWorldEnv:
     TILE_SIZE = 64
@@ -25,18 +27,17 @@ class GridWorldEnv:
         self.sounds = {
             "treat": pygame.mixer.Sound("assets/sounds/treat.wav"),
             "trap": pygame.mixer.Sound("assets/sounds/trap.wav"),
-            "level_complete": pygame.mixer.Sound("assets/sounds/level_complete.wav")
+            "level_complete": pygame.mixer.Sound("assets/sounds/level_complete.wav"),
         }
 
         for s in self.sounds.values():
             s.set_volume(0.6)
-    
 
-     #Function to get number of remaining treats
+    # Function to get number of remaining treats
     def get_treat_count(self):
         return self.remaining_treats
-    
-    #Function to get total number of treats in level
+
+    # Function to get total number of treats in level
     def get_total_treats(self):
         return self.total_treats
 
@@ -64,14 +65,14 @@ class GridWorldEnv:
 
         # default images (used if level not found in dict)
         default_tiles = {
-            "T": "tile_1.png",   # treat
-            "X": "tile_2.png",   # trap
-            "#": "tile_3.png",   # wall
-            ".": "tile_4.png",   # floor
+            "T": "tile_1.png",  # treat
+            "X": "tile_2.png",  # trap
+            "#": "tile_3.png",  # wall
+            ".": "tile_4.png",  # floor
         }
 
         # overrides the default tiles based on the current level
-        if (self.current_level+1) in Levels:
+        if (self.current_level + 1) in Levels:
             level_pair = Levels[self.current_level + 1]
             default_tiles["."] = level_pair[0]
             default_tiles["#"] = level_pair[1]
@@ -120,9 +121,9 @@ class GridWorldEnv:
                     self.objects[(r, c)] = "X"
                 elif ch == "#":
                     self.objects[(r, c)] = "#"
-        
-        #Store total treats at this level
-        self.total_treats = self.remaining_treats  
+
+        # Store total treats at this level
+        self.total_treats = self.remaining_treats
 
     # ----------------------------
     # Environment API
@@ -151,11 +152,11 @@ class GridWorldEnv:
 
         # Stay inside bounds
         if nr < 0 or nr >= len(self.grid) or nc < 0 or nc >= len(self.grid[0]):
-            return False  # no level change
+            return False, "wall"
 
         # Check wall
         if self.objects.get((nr, nc)) == "#":
-            return False
+            return False, "wall"
 
         self.pet_pos = [nr, nc]
 
@@ -163,29 +164,27 @@ class GridWorldEnv:
         if (nr, nc) in self.objects:
             obj = self.objects.pop((nr, nc))
 
-    
             if obj == "T":
                 self.remaining_treats -= 1
                 print("Picked up a treat!")
                 if "treat" in self.sounds:
                     self.sounds["treat"].play()
-
                 if self.remaining_treats == 0:
                     print("Level complete!")
                     if "level_complete" in self.sounds:
                         self.sounds["level_complete"].play()
                     self._next_level()
-                    return True  # signal level changed
+                    return True, "finished"
+                return False, "treat"
 
-        
             elif obj == "X":
                 print("Game over! Pet hit a trap.")
                 if "trap" in self.sounds:
                     self.sounds["trap"].play()
                 self.reset(self.current_level)
-                return False
+                return False, "trap"
 
-        return False  # no level change
+        return False, "empty"
 
     def _next_level(self):
         if self.current_level + 1 < len(self.level_files):
@@ -225,9 +224,8 @@ class GridWorldEnv:
                     if tile:
                         screen.blit(tile, (c * self.TILE_SIZE, r * self.TILE_SIZE))
 
-
     def render_ui(self, screen):
-        total_treats = self.get_total_treats()   # total in level
+        total_treats = self.get_total_treats()  # total in level
         collected = total_treats - self.remaining_treats  # already picked up
 
         # Apple icon
@@ -262,12 +260,16 @@ class GridWorldEnv:
                 pygame.draw.rect(screen, color, (bar_x, bar_y, fill_width, bar_height))
 
         # Progress bar border
-        pygame.draw.rect(screen, (255, 255, 255), (bar_x, bar_y, bar_width, bar_height), 2)
+        pygame.draw.rect(
+            screen, (255, 255, 255), (bar_x, bar_y, bar_width, bar_height), 2
+        )
 
         # Completion message
         if collected == total_treats and total_treats > 0:
             complete_font = pygame.font.Font(None, 24)
-            complete_text = complete_font.render("All treats collected!", True, (100, 255, 100))
+            complete_text = complete_font.render(
+                "All treats collected!", True, (100, 255, 100)
+            )
             screen.blit(complete_text, (bar_x, bar_y + 25))
 
         # Draw pet
@@ -275,4 +277,49 @@ class GridWorldEnv:
             self.pet_surface,
             (self.pet_pos[1] * self.TILE_SIZE, self.pet_pos[0] * self.TILE_SIZE),
         )
-   
+
+    def get_state(self):
+        """Return the current state as an integer index for Q-learning."""
+        cols = len(self.grid[0])
+        return self.pet_pos[0] * cols + self.pet_pos[1]
+
+    def step(self, action_idx):
+        """
+        Take an action by index, return (next_state, reward, done, info)
+        """
+        action = ACTIONS[action_idx]
+        level_changed, tile = self.move_pet(action)
+
+        # Reward logic
+        if tile == "finished":
+            reward = 10
+            done = True
+        elif tile == "trap":
+            reward = -10
+            done = True
+        elif tile == "treat":
+            reward = 10
+            done = False
+        elif tile == "empty":
+            reward = -1
+            done = False
+        elif tile == "wall":
+            reward = -2
+            done = False
+        else:
+            reward = 0
+            done = False
+
+        next_state = self.get_state()
+        info = {"tile": tile}
+        return next_state, reward, done, info
+
+    @property
+    def num_states(self):
+        """Number of possible states (positions) in the grid."""
+        return len(self.grid) * len(self.grid[0])
+
+    @property
+    def num_actions(self):
+        """Number of possible actions."""
+        return len(ACTIONS)

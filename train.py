@@ -21,7 +21,8 @@ def train(level=0, episodes=1000, alpha=0.1, gamma=0.95,
 
     rewards = []
     for ep in range(episodes):
-        s = env.reset(level)
+        env.reset(level)
+        s = env.get_state()  # <-- get integer state index
         done, total, steps = False, 0.0, 0
 
         while not done and steps < 500:
