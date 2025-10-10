@@ -9,6 +9,7 @@ class GridWorldEnv:
     TILE_SIZE = 64
 
     def __init__(self, level_files, asset_dir="assets"):
+        pygame.mixer.init()
         self.level_files = level_files
         self.asset_dir = asset_dir
         self.current_level = 0
@@ -21,6 +22,15 @@ class GridWorldEnv:
         self._load_assets()
         self.total_treats = 0
         self.collected_treats = 0
+        self.sounds = {
+            "treat": pygame.mixer.Sound("assets/sounds/treat.wav"),
+            "trap": pygame.mixer.Sound("assets/sounds/trap.wav"),
+            "level_complete": pygame.mixer.Sound("assets/sounds/level_complete.wav")
+        }
+
+        for s in self.sounds.values():
+            s.set_volume(0.6)
+    
 
      #Function to get number of remaining treats
     def get_treat_count(self):
@@ -152,15 +162,26 @@ class GridWorldEnv:
         # Check object interactions
         if (nr, nc) in self.objects:
             obj = self.objects.pop((nr, nc))
+
+    
             if obj == "T":
                 self.remaining_treats -= 1
                 print("Picked up a treat!")
+                if "treat" in self.sounds:
+                    self.sounds["treat"].play()
+
                 if self.remaining_treats == 0:
                     print("Level complete!")
+                    if "level_complete" in self.sounds:
+                        self.sounds["level_complete"].play()
                     self._next_level()
                     return True  # signal level changed
+
+        
             elif obj == "X":
                 print("Game over! Pet hit a trap.")
+                if "trap" in self.sounds:
+                    self.sounds["trap"].play()
                 self.reset(self.current_level)
                 return False
 
