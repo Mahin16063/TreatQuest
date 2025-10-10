@@ -1,5 +1,6 @@
 import os
 import pygame
+from levels.levelAssets import Levels
 #from q_table import QLearningAgent
 
 ACTIONS = ["UP", "DOWN", "LEFT", "RIGHT"]
@@ -50,11 +51,28 @@ class GridWorldEnv:
         return pygame.transform.scale(img, (self.TILE_SIZE, self.TILE_SIZE))
 
     def _load_assets(self):
+
+        # default images (used if level not found in dict)
+        default_tiles = {
+            "T": "tile_1.png",   # treat
+            "X": "tile_2.png",   # trap
+            "#": "tile_3.png",   # wall
+            ".": "tile_4.png",   # floor
+        }
+
+        # overrides the default tiles based on the current level
+        if (self.current_level+1) in Levels:
+            level_pair = Levels[self.current_level + 1]
+            default_tiles["."] = level_pair[0]
+            default_tiles["#"] = level_pair[1]
+            default_tiles["T"] = level_pair[2]
+            default_tiles["X"] = level_pair[3]
+
         self.tile_surfaces = {
-            "T": self._safe_load("tiles", "tile_1.png"),
-            "X": self._safe_load("tiles", "tile_2.png"),
-            "#": self._safe_load("tiles", "tile_3.png"),
-            ".": self._safe_load("tiles", "tile_4.png"),
+            "T": self._safe_load("tiles", default_tiles["T"]),
+            "X": self._safe_load("tiles", default_tiles["X"]),
+            "#": self._safe_load("tiles", default_tiles["#"]),
+            ".": self._safe_load("tiles", default_tiles["."]),
             "P": None,  # Pet drawn separately
         }
         self.pet_surface = self._safe_load("pets", "orange-cat.png")
@@ -101,6 +119,7 @@ class GridWorldEnv:
     # ----------------------------
     def reset(self, level_index=0):
         self.current_level = level_index
+        self._load_assets()
         self.grid = self._load_map(self.level_files[level_index])
         self._generate_objects()
         return self.grid
