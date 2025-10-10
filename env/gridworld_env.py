@@ -1,6 +1,9 @@
 import os
 import pygame
+from levels.levelAssets import Levels
+#from q_table import QLearningAgent
 
+ACTIONS = ["UP", "DOWN", "LEFT", "RIGHT"]
 
 class GridWorldEnv:
     TILE_SIZE = 64
@@ -15,8 +18,17 @@ class GridWorldEnv:
         self.tile_surfaces = {}
         self.objects = {}
         self.remaining_treats = 0
-
         self._load_assets()
+        self.total_treats = 0
+        self.collected_treats = 0
+
+     #Function to get number of remaining treats
+    def get_treat_count(self):
+        return self.remaining_treats
+    
+    #Function to get total number of treats in level
+    def get_total_treats(self):
+        return self.total_treats
 
     # ----------------------------
     # Helper functions
@@ -39,14 +51,31 @@ class GridWorldEnv:
         return pygame.transform.scale(img, (self.TILE_SIZE, self.TILE_SIZE))
 
     def _load_assets(self):
+
+        # default images (used if level not found in dict)
+        default_tiles = {
+            "T": "tile_1.png",   # treat
+            "X": "tile_2.png",   # trap
+            "#": "tile_3.png",   # wall
+            ".": "tile_4.png",   # floor
+        }
+
+        # overrides the default tiles based on the current level
+        if (self.current_level+1) in Levels:
+            level_pair = Levels[self.current_level + 1]
+            default_tiles["."] = level_pair[0]
+            default_tiles["#"] = level_pair[1]
+            default_tiles["T"] = level_pair[2]
+            default_tiles["X"] = level_pair[3]
+
         self.tile_surfaces = {
-            "T": self._safe_load("tiles", "tile_1.png"),
-            "X": self._safe_load("tiles", "tile_2.png"),
-            "#": self._safe_load("tiles", "tile_3.png"),
-            ".": self._safe_load("tiles", "tile_4.png"),
+            "T": self._safe_load("tiles", default_tiles["T"]),
+            "X": self._safe_load("tiles", default_tiles["X"]),
+            "#": self._safe_load("tiles", default_tiles["#"]),
+            ".": self._safe_load("tiles", default_tiles["."]),
             "P": None,  # Pet drawn separately
         }
-        self.pet_surface = self._safe_load("pets", "pet.png")
+        self.pet_surface = self._safe_load("pets", "orange-cat.png")
 
     # ----------------------------
     # Map loading
@@ -81,12 +110,16 @@ class GridWorldEnv:
                     self.objects[(r, c)] = "X"
                 elif ch == "#":
                     self.objects[(r, c)] = "#"
+        
+        #Store total treats at this level
+        self.total_treats = self.remaining_treats  
 
     # ----------------------------
     # Environment API
     # ----------------------------
     def reset(self, level_index=0):
         self.current_level = level_index
+        self._load_assets()
         self.grid = self._load_map(self.level_files[level_index])
         self._generate_objects()
         return self.grid
@@ -98,8 +131,10 @@ class GridWorldEnv:
         elif action == "DOWN":
             dr, dc = 1, 0
         elif action == "LEFT":
+            self.pet_surface = self._safe_load("pets", "orange-cat-left.png")
             dr, dc = 0, -1
         elif action == "RIGHT":
+            self.pet_surface = self._safe_load("pets", "orange-cat.png")
             dr, dc = 0, 1
 
         nr, nc = self.pet_pos[0] + dr, self.pet_pos[1] + dc
@@ -153,26 +188,70 @@ class GridWorldEnv:
             print(line)
 
     def render_pygame(self, screen):
-        for r, row in enumerate(self.grid):
-            for c, ch in enumerate(row):
-                tile = self.tile_surfaces.get(ch)
+        rows = len(self.grid)
+        cols = len(self.grid[0])
 
-                if tile is None and ch != "P":
-                    raise ValueError(
-                        f"Unrecognized tile character '{ch}' at row {r}, col {c}"
-                    )
+        for r in range(rows):
+            for c in range(cols):
+                # Always draw background first
+                bg_tile = self.tile_surfaces["."]
+                screen.blit(bg_tile, (c * self.TILE_SIZE, r * self.TILE_SIZE))
 
-                if tile:
-                    screen.blit(tile, (c * self.TILE_SIZE, r * self.TILE_SIZE))
+                # Draw foreground objects if present
+                if (r, c) in self.objects:
+                    obj = self.objects[(r, c)]
+                    tile = self.tile_surfaces.get(obj)
+                    if tile:
+                        screen.blit(tile, (c * self.TILE_SIZE, r * self.TILE_SIZE))
 
-        # Draw objects
-        for (r, c), obj in self.objects.items():
-            tile = self.tile_surfaces.get(obj)
-            if tile:
-                screen.blit(tile, (c * self.TILE_SIZE, r * self.TILE_SIZE))
+
+    def render_ui(self, screen):
+        total_treats = self.get_total_treats()   # total in level
+        collected = total_treats - self.remaining_treats  # already picked up
+
+        # Apple icon
+        apple_icon = pygame.transform.scale(self.tile_surfaces["T"], (32, 32))
+        screen.blit(apple_icon, (10, 10))
+
+        # Counter text
+        font = pygame.font.Font(None, 36)
+        counter_text = f"{collected}/{total_treats}"
+        text_surface = font.render(counter_text, True, (255, 255, 255))
+        screen.blit(text_surface, (50, 15))
+
+        # Progress bar background
+        bar_width = 200
+        bar_height = 20
+        bar_x = 10
+        bar_y = 50
+        pygame.draw.rect(screen, (50, 50, 50), (bar_x, bar_y, bar_width, bar_height))
+
+        # Progress fill
+        if total_treats > 0:
+            progress = collected / total_treats
+            fill_width = int(bar_width * progress)
+            if fill_width > 0:
+                if progress < 0.5:
+                    color = (255, 100, 100)  # red
+                elif progress < 1.0:
+                    color = (255, 255, 100)  # yellow
+                else:
+                    color = (100, 255, 100)  # green
+
+                pygame.draw.rect(screen, color, (bar_x, bar_y, fill_width, bar_height))
+
+        # Progress bar border
+        pygame.draw.rect(screen, (255, 255, 255), (bar_x, bar_y, bar_width, bar_height), 2)
+
+        # Completion message
+        if collected == total_treats and total_treats > 0:
+            complete_font = pygame.font.Font(None, 24)
+            complete_text = complete_font.render("All treats collected!", True, (100, 255, 100))
+            screen.blit(complete_text, (bar_x, bar_y + 25))
 
         # Draw pet
         screen.blit(
             self.pet_surface,
             (self.pet_pos[1] * self.TILE_SIZE, self.pet_pos[0] * self.TILE_SIZE),
         )
+   
