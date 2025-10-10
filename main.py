@@ -4,6 +4,7 @@ from env.q_table import QLearningAgent
 
 def main():
     pygame.init()
+    pygame.mixer.init()
 
     # Temporary tiny screen to allow convert_alpha() in image loading
     pygame.display.set_mode((1, 1))
