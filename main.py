@@ -1,6 +1,6 @@
 import pygame
 from env.gridworld_env import GridWorldEnv
-
+from env.q_table import QLearningAgent
 
 def main():
     pygame.init()
@@ -43,6 +43,7 @@ def main():
 
         screen.fill((0, 0, 0))
         env.render_pygame(screen)
+        env.render_ui(screen)
         pygame.display.flip()
         clock.tick(10)
 
