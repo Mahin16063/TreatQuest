@@ -1,3 +1,5 @@
+import os
+os.environ["SDL_VIDEO_CENTERED"] = "1"
 import pygame
 from env.gridworld_env import GridWorldEnv
 from env.q_table import QLearningAgent
@@ -13,7 +15,7 @@ def main():
         level_files=["levels/level1.txt", "levels/level2.txt", "levels/level3.txt"], asset_dir="assets"
     )
     env.reset(0)
-
+    print("Window size: ", env.get_window_size())
     # Set the actual window size
     screen = pygame.display.set_mode(env.get_window_size())
     pygame.display.set_caption("Treat Quest")
