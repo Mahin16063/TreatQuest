@@ -1,2 +1,6 @@
+.vs
+.vscode
 .venv
+__pycache__
 env/__pycache__/
+levels/__pycache__/
