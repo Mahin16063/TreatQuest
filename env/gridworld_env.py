@@ -25,8 +25,8 @@ class GridWorldEnv:
     def get_treat_count(self):
         return self.remaining_treats
     
+    #Function to get total number of treats in level
     def get_total_treats(self):
-        "Return total treats in the level"
         return self.total_treats
 
     # ----------------------------
@@ -112,8 +112,10 @@ class GridWorldEnv:
         elif action == "DOWN":
             dr, dc = 1, 0
         elif action == "LEFT":
+            self.pet_surface = self._safe_load("pets", "orange-cat-left.png")
             dr, dc = 0, -1
         elif action == "RIGHT":
+            self.pet_surface = self._safe_load("pets", "orange-cat.png")
             dr, dc = 0, 1
 
         nr, nc = self.pet_pos[0] + dr, self.pet_pos[1] + dc
