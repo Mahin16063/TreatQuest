@@ -1,4 +1,5 @@
 import os
+import glob
 import pygame
 from levels.levelAssets import Levels
 
@@ -89,6 +90,56 @@ class GridWorldEnv:
         self.pet_surface = self._safe_load("pets", "orange-cat.png")
 
     # ----------------------------
+    # Animations
+    # ----------------------------
+
+    def _load_trap_animation(self, tile=None):
+        """
+        Load trap frames from:
+        assets/tiles/animated assets/level N/anime_*.png
+        Falls back to the static trap tile if none found.
+        """
+        tile = tile or self.TILE_SIZE
+
+        level_folder = f"level {self.current_level + 1}"
+        folder = os.path.join(self.asset_dir, "tiles", "animated assets", level_folder)
+        pattern = os.path.join(folder, "anime_*.png")
+
+        self.trap_frames = []
+        for path in sorted(glob.glob(pattern)):
+            try:
+                surf = pygame.image.load(path).convert_alpha()
+                surf = pygame.transform.smoothscale(surf, (tile, tile))
+                self.trap_frames.append(surf)
+            except Exception as e:
+                print(f"Exception: {e}")
+                pass
+
+        # Debug to see what it did
+        print(f"[trap anim] level={self.current_level+1} folder={folder} frames={len(self.trap_frames)}")
+
+        if not self.trap_frames:
+            # fall back to static trap tile if available
+            static = self.tile_surfaces.get("X")
+            self.trap_frames = [static] if static is not None else [None]
+
+        self.trap_ms_per_frame = 500  # ~5 miliseconds wait per frame change
+
+
+    # --------------------------------
+    # Helper functions for animations
+    # --------------------------------
+
+    def _trap_current_frame(self):
+        """Return the current frame for the animated trap."""
+        if not getattr(self, "trap_frames", None):
+            return None
+        now = pygame.time.get_ticks()
+        idx = (now // self.trap_ms_per_frame) % len(self.trap_frames)
+        return self.trap_frames[idx]
+
+
+    # ----------------------------
     # Map loading
     # ----------------------------
     def _load_map(self, filename):
@@ -133,7 +184,9 @@ class GridWorldEnv:
         self._load_assets()
         self.grid = self._load_map(self.level_files[level_index])
         self._generate_objects()
+        self._load_trap_animation(tile=self.TILE_SIZE)  
         return self.grid
+
 
     def move_pet(self, action):
         dr, dc = 0, 0
@@ -220,9 +273,21 @@ class GridWorldEnv:
                 # Draw foreground objects if present
                 if (r, c) in self.objects:
                     obj = self.objects[(r, c)]
-                    tile = self.tile_surfaces.get(obj)
-                    if tile:
-                        screen.blit(tile, (c * self.TILE_SIZE, r * self.TILE_SIZE))
+
+                    # Animated trap: draw current frame instead of static tile
+                    if obj == "X":
+                        frame = self._trap_current_frame()
+                        if frame is not None:
+                            screen.blit(frame, (c * self.TILE_SIZE, r * self.TILE_SIZE))
+                        else:
+                            # fallback to default or just the static version of it
+                            tile = self.tile_surfaces.get("X")
+                            if tile:
+                                screen.blit(tile, (c * self.TILE_SIZE, r * self.TILE_SIZE))
+                    else:
+                        tile = self.tile_surfaces.get(obj)
+                        if tile:
+                            screen.blit(tile, (c * self.TILE_SIZE, r * self.TILE_SIZE))
 
     def render_ui(self, screen):
         total_treats = self.get_total_treats()  # total in level
