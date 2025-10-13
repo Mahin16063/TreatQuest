@@ -20,7 +20,7 @@ for episode in range(NUM_EPISODES):
     done = False
     reward = 0
 
-    while done == False:
+    while not done:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -28,7 +28,7 @@ for episode in range(NUM_EPISODES):
 
         state = tuple(env.pet_pos)
         choose_action = agent.choose_action(state)
-        _, tile = env.move_pet(choose_action) # returns True if it Treat/Empty Space
+        _, tile = env.move_pet(choose_action)  # returns (level_changed, tile_type)
 
         if tile == "finished":
             reward = 10
@@ -52,4 +52,3 @@ for episode in range(NUM_EPISODES):
         
     agent.epsilon *= 0.95
 
-        
