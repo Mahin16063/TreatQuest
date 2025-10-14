@@ -97,4 +97,4 @@ if __name__ == "__main__":
     parser.add_argument("--episodes", type=int, default=1000)
     parser.add_argument("--delay", type=int, default=100)
     args = parser.parse_args()
-    run_visual_train(level=args.level, episodes=args.episodes, delay=args.delay)
+    run_visual_train(level=(args.level-1), episodes=args.episodes, delay=args.delay)
