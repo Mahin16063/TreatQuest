@@ -27,8 +27,8 @@ def train(level=0, episodes=1000, alpha=0.1, gamma=0.95,
 
         while not done and steps < 500:
             a = agent.select_action(s)
-            s2, r, done, _ = env.step(a)
-            agent.update(s, a, r, s2, done)
+            s2, r, done, _ = env.step(a) # Results for new state
+            agent.update(s, a, r, s2, done) # Updating Q-table
             s = s2
             total += r
             steps += 1
