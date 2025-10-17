@@ -25,6 +25,7 @@ class GridWorldEnv:
         self._load_assets()
         self.total_treats = 0
         self.collected_treats = 0
+        self.step_count = 0
         self.sounds = {
             "treat": pygame.mixer.Sound("assets/sounds/treat.wav"),
             "trap": pygame.mixer.Sound("assets/sounds/trap.wav"),
@@ -87,7 +88,7 @@ class GridWorldEnv:
             ".": self._safe_load("tiles", default_tiles["."]),
             "P": None,  # Pet drawn separately
         }
-        self.pet_surface = self._safe_load("pets", "orange-cat.png")
+        self.pet_surface = self._safe_load("pets", "siameseFront.png")
 
     # ----------------------------
     # Animations
@@ -190,18 +191,26 @@ class GridWorldEnv:
 
     def move_pet(self, action):
         dr, dc = 0, 0
+        r, c = self.pet_pos
+        if self.step_count%2==0:
+            num = '2'
+        else:
+            num = ''
         if action == "UP":
+            self.pet_surface = self._safe_load("pets", f"siameseBack{num}.png")
             dr, dc = -1, 0
         elif action == "DOWN":
+            self.pet_surface = self._safe_load("pets", f"siameseFront{num}.png")
             dr, dc = 1, 0
         elif action == "LEFT":
-            self.pet_surface = self._safe_load("pets", "orange-cat-left.png")
+            self.pet_surface = self._safe_load("pets", f"siameseLeft{num}.png")
             dr, dc = 0, -1
         elif action == "RIGHT":
-            self.pet_surface = self._safe_load("pets", "orange-cat.png")
+            self.pet_surface = self._safe_load("pets", f"siameseRight{num}.png")
             dr, dc = 0, 1
 
         nr, nc = self.pet_pos[0] + dr, self.pet_pos[1] + dc
+        self.step_count += 1
 
         # Stay inside bounds
         if nr < 0 or nr >= len(self.grid) or nc < 0 or nc >= len(self.grid[0]):

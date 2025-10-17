@@ -5,8 +5,8 @@ import numpy as np
 import argparse
 
 
-def run_visual_train(level=0, episodes=1000, alpha=0.8, gamma=0.75,
-          eps_start=1.0, eps_end=0.05, eps_decay=800, delay=10):
+def run_visual_train(level=0, episodes=1000, alpha=0.9, gamma=0.9,
+          eps_start=1.0, eps_end=0.05, eps_decay=800, delay=100):
     pygame.init()
     pygame.mixer.init()
 
@@ -40,7 +40,7 @@ def run_visual_train(level=0, episodes=1000, alpha=0.8, gamma=0.75,
     
     pygame.display.set_caption("TreatQuest: A Visual Training Demo")
     agent = QAgent(env.num_states, env.num_actions, alpha=alpha, gamma=gamma,
-                   eps_start=eps_start, eps_end=eps_end, eps_decay_episodes=eps_decay)
+                   eps_start=eps_start, eps_end=eps_end, eps_decay_episodes=eps_decay, env=env) # Initializing Agent
     rewards = []
     for ep in range(episodes):
         env.reset(level)
@@ -58,13 +58,14 @@ def run_visual_train(level=0, episodes=1000, alpha=0.8, gamma=0.75,
             if info["tile"] == "finished":
                 if (level + 1) < len(env.level_files): # Moving to Next Level, Resetting Q-Table and Screen
                     level += 1
-                    print(f"Level {level-1} completed. Next ;evel: {level}!")
+                    print(f"Level {level-1} completed. Next level: {level}!")
+                    np.save(f"q_table_level{level-1}.npy", agent.Q)
                     env.reset(level)
                     current_state = env.get_state()
                     
                     screen = pygame.display.set_mode(env.get_window_size())
                     agent = QAgent(env.num_states, env.num_actions, alpha=alpha, gamma=gamma,
-                                   eps_start=eps_start, eps_end=eps_end, eps_decay_episodes=eps_decay)
+                                   eps_start=eps_start, eps_end=eps_end, eps_decay_episodes=eps_decay, env=env) # Resetting Q-Table
             
                 else: # All Levels Are Completed
                     print("All levels completed!\nCongrats!")
@@ -82,6 +83,7 @@ def run_visual_train(level=0, episodes=1000, alpha=0.8, gamma=0.75,
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
+                    agent.print_Q()
                     return
             agent.decay_epsilon(ep + 1)
             rewards.append(total_reward)
@@ -93,8 +95,9 @@ def run_visual_train(level=0, episodes=1000, alpha=0.8, gamma=0.75,
         
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--level", type=int, default=0)
+    parser.add_argument("--level", type=int, default=1)
     parser.add_argument("--episodes", type=int, default=1000)
     parser.add_argument("--delay", type=int, default=100)
     args = parser.parse_args()
-    run_visual_train(level=(args.level-1), episodes=args.episodes, delay=args.delay)
+    run_visual_train(level=args.level-1, episodes=args.episodes, delay=args.delay)
+    
