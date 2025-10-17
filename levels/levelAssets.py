@@ -6,4 +6,3 @@ Levels = { # level num : (path, wall, treat, trap)
     3: ("tile_23.png", "tile_21.png", "tile_14.png", "tile_2.png")
 }
 
-
