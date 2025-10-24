@@ -1,3 +1,5 @@
+import os
+os.environ["SDL_VIDEO_CENTERED"] = "1"
 from env.gridworld_env import GridWorldEnv
 from agent.qagent import QAgent
 import pygame
@@ -14,7 +16,6 @@ def run_visual_train(level=0, episodes=1000, alpha=0.9, gamma=0.9,
     pygame.mixer.music.load("assets/sounds/background_music.mp3")
     #loops forever
     pygame.mixer.music.play(-1)
-
     
     info = pygame.display.Info()
     screen_width = info.current_w
