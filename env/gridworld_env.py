@@ -1,6 +1,7 @@
 import os
 import glob
 import pygame
+import shutil
 from levels.levelAssets import Levels
 
 # from q_table import QLearningAgent
@@ -32,6 +33,8 @@ class GridWorldEnv:
             "level_complete": pygame.mixer.Sound("assets/sounds/level_complete.wav"),
             "background_music": pygame.mixer.Sound("assets/sounds/background_music.mp3"),
         }
+        # path to temporary level file used for learning (copied from original on reset)
+        self.temp_level_file = None
 
         for s in self.sounds.values():
             s.set_volume(0.6)
@@ -183,8 +186,23 @@ class GridWorldEnv:
     # ----------------------------
     def reset(self, level_index=0):
         self.current_level = level_index
+
+        # Create a temporary copy of the original level file that we'll use for learning.
+        orig_path = self.level_files[level_index]
+        levels_dir = os.path.dirname(orig_path) or "."
+        temp_name = f"temp_{os.path.basename(orig_path)}"
+        temp_path = os.path.join(levels_dir, temp_name)
+        try:
+            shutil.copyfile(orig_path, temp_path)
+            self.temp_level_file = temp_path
+            print(f"\nRESET: Copied original level file {orig_path} to temp file {temp_path}")
+        except Exception as e:
+            print(f"Warning: could not create temp level file: {e}. Using original level file.")
+            self.temp_level_file = orig_path
+
         self._load_assets()
-        self.grid = self._load_map(self.level_files[level_index])
+        # Load from temp file so modifications are persistent for the learning run
+        self.grid = self._load_map(self.temp_level_file)
         self._generate_objects()
         self._load_trap_animation(tile=self.TILE_SIZE)  
         return self.grid
@@ -228,8 +246,22 @@ class GridWorldEnv:
             obj = self.objects.pop((nr, nc))
 
             if obj == "T":
+                # Update both runtime objects and the grid file used for learning
                 self.remaining_treats -= 1
-                print("Picked up a treat!")
+                print(f"\nTREAT: Updating temp file {self.temp_level_file}")
+                print("Grid before update:")
+                for row in self.grid:
+                    print("".join(row))
+                
+                try:
+                    self.grid[nr][nc] = "."
+                    self._write_temp_map()
+                    print("\nGrid after update:")
+                    for row in self.grid:
+                        print("".join(row))
+                except Exception as e:
+                    print(f"Warning: failed to update temp level file: {e}")
+
                 if "treat" in self.sounds:
                     self.sounds["treat"].play()
                 if self.remaining_treats == 0:
@@ -244,6 +276,7 @@ class GridWorldEnv:
                 print("Game over! Pet hit a trap.")
                 if "trap" in self.sounds:
                     self.sounds["trap"].play()
+                # Reset will copy original level back into the temp file
                 self.reset(self.current_level)
                 return False, "trap"
 
@@ -398,3 +431,17 @@ class GridWorldEnv:
     def num_actions(self):
         """Number of possible actions."""
         return len(ACTIONS)
+
+    # ----------------------------
+    # File helpers for temp level persistence
+    # ----------------------------
+    def _write_temp_map(self):
+        """Write current grid to the temp level file so collected treats are removed from disk used for learning."""
+        if not self.temp_level_file:
+            return
+        try:
+            with open(self.temp_level_file, "w", encoding="utf-8") as f:
+                for row in self.grid:
+                    f.write("".join(row) + "\n")
+        except Exception as e:
+            print(f"Error writing temp level file '{self.temp_level_file}': {e}")
