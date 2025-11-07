@@ -87,7 +87,6 @@ def train_by_completion(level=0, alpha=0.1, gamma=0.95,
             print(f"Level {level} completed! Moving to next level.")
             level += 1
             if level < len(env.level_files): # Move to Next Level
-                np.save(f"q_table_level{level}.npy", agent.Q)
                 env.reset(level)
                 current_state = env.get_state()
                 
@@ -98,6 +97,7 @@ def train_by_completion(level=0, alpha=0.1, gamma=0.95,
                 print("All levels completed!\nCongrats!") # All Levels Done
                 pygame.quit()
                 return
+            np.save(f"q_table_level{level}.npy", agent.Q)
         else:
             env.reset(level)
             current_state = env.get_state()
