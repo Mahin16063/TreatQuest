@@ -7,8 +7,12 @@ import numpy as np
 import argparse
 
 
-def train_by_completion(level=0, episodes=1000, alpha=0.9, gamma=0.9,
+def train_by_completion(level=0, alpha=0.1, gamma=0.95,
           eps_start=1.0, eps_end=0.05, eps_decay=800, delay=100):
+    """
+    Train the pet until the level is completed.
+    Save the q_table for each level at the end of training.
+    """
     pygame.init()
     pygame.mixer.init()
 
@@ -79,7 +83,7 @@ def train_by_completion(level=0, episodes=1000, alpha=0.9, gamma=0.9,
                     return
 
         # Completed Level #
-        if info["tile"] == "finished":
+        if info == "finished":
             print(f"Level {level} completed! Moving to next level.")
             level += 1
             if level < len(env.level_files): # Move to Next Level
@@ -93,6 +97,7 @@ def train_by_completion(level=0, episodes=1000, alpha=0.9, gamma=0.9,
                 print("All levels completed!\nCongrats!") # All Levels Done
                 pygame.quit()
                 return
+            np.save(f"q_table_level{level}.npy", agent.Q)
         else:
             env.reset(level)
             current_state = env.get_state()
@@ -104,7 +109,7 @@ def train_by_completion(level=0, episodes=1000, alpha=0.9, gamma=0.9,
     print("Training was Successful!\n Thank you for watching! >^.^<")
 
 
-def train_by_episode(level=0, episodes=50, alpha=0.9, gamma=0.9, 
+def train_by_episode(level=0, episodes=1000, alpha=0.1, gamma=0.95, 
                       eps_start=1.0, eps_end=0.05, eps_decay=800, delay=1):
     """
     Train the pet for a fixed number of episodes.
@@ -188,7 +193,7 @@ def train_by_episode(level=0, episodes=50, alpha=0.9, gamma=0.9,
         print(f"Training finished. Q-table saved for level {level}.")
     pygame.quit()
     
-    
+
 
 def run_visual(level=0, delay=100):
     pygame.init()
@@ -221,37 +226,36 @@ def run_visual(level=0, delay=100):
     window_width = grid_cols * env.TILE_SIZE
     window_height = grid_rows * env.TILE_SIZE
     screen = pygame.display.set_mode((window_width, window_height))
-    
     pygame.display.set_caption("TreatQuest: A Visual Run")
-    for level in range(len(env.level_files)):
-        env.reset(level)
+
+    try:
+        q_table = np.load(f"q_table_level{level}.npy")
+    except FileNotFoundError:
+        print(f"Missing {f"q_table_level{level}.npy"}! Train first before running.")
+        pygame.quit()
+        return
+    
+    current_state = env.get_state()
+    done = False
+    steps = 0
+
+    while not done:
+        action = np.argmax(q_table[current_state])
+        next_state, reward, done, info = env.step(action)
+        steps += 1
+
+        screen.fill((0, 0, 0))
+        env.render_pygame(screen)
+        env.render_ui(screen)
+        pygame.display.flip()
+        pygame.time.delay(delay)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return
+
         current_state = env.get_state()
-        done = False
-        steps = 0
-        try:
-            level_file = np.load(f"q_table_level{level}.npy")
-        except FileNotFoundError:
-            print(f"Missing {f"q_table_level{level}.npy"}! Train first before running.")
-            pygame.quit()
-            return
-        while not done:
-                    action = np.argmax(level_file[current_state])
-                    print(f"Best Action for state {current_state}: {action}")
-                    next_state, reward, done, info = env.step(action)
-                    steps += 1
-
-                    screen.fill((0, 0, 0))
-                    env.render_pygame(screen)
-                    env.render_ui(screen)
-                    pygame.display.flip()
-                    pygame.time.delay(delay)
-
-                    for event in pygame.event.get():
-                        if event.type == pygame.QUIT:
-                            pygame.quit()
-                            return
-
-                    current_state = env.get_state()
 
     pygame.quit()
     print("All levels completed! >^.^<")
@@ -263,8 +267,6 @@ if __name__ == "__main__":
     parser.add_argument("--episodes", type=int, default=1000)
     parser.add_argument("--delay", type=int, default=100)
     args = parser.parse_args()
-    train_by_episode(level=args.level, episodes=args.episodes, delay=args.delay)
-    file = np.load("q_table_level0.npy")
-    # for state in range(file.shape[0]):
-    #     print(f"State {state}: {file[state]}")
-    
+    #train_by_completion(level=1, delay=1)
+    #print("Training was Successful!\n Thank you for watching! >^.^<")
+    run_visual(level=1, delay=args.delay)    
