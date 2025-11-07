@@ -7,7 +7,7 @@ import numpy as np
 import argparse
 
 
-def train_by_completion(level=0, episodes=1000, alpha=0.9, gamma=0.9,
+def train_by_completion(level=0, alpha=0.1, gamma=0.95,
           eps_start=1.0, eps_end=0.05, eps_decay=800, delay=100):
     """
     Train the pet until the level is completed.
@@ -83,10 +83,11 @@ def train_by_completion(level=0, episodes=1000, alpha=0.9, gamma=0.9,
                     return
 
         # Completed Level #
-        if info["tile"] == "finished":
+        if info == "finished":
             print(f"Level {level} completed! Moving to next level.")
             level += 1
             if level < len(env.level_files): # Move to Next Level
+                np.save(f"q_table_level{level}.npy", agent.Q)
                 env.reset(level)
                 current_state = env.get_state()
                 
@@ -108,7 +109,7 @@ def train_by_completion(level=0, episodes=1000, alpha=0.9, gamma=0.9,
     print("Training was Successful!\n Thank you for watching! >^.^<")
 
 
-def train_by_episode(level=0, episodes=50, alpha=0.9, gamma=0.9, 
+def train_by_episode(level=0, episodes=1000, alpha=0.1, gamma=0.95, 
                       eps_start=1.0, eps_end=0.05, eps_decay=800, delay=1):
     """
     Train the pet for a fixed number of episodes.
@@ -227,15 +228,15 @@ def run_visual(level=0, delay=100):
     screen = pygame.display.set_mode((window_width, window_height))
     
     pygame.display.set_caption("TreatQuest: A Visual Run")
-    for level in range(len(env.level_files)):
-        env.reset(level)
+    for lev in range(level):
+        env.reset(lev)
         current_state = env.get_state()
         done = False
         steps = 0
         try:
-            level_file = np.load(f"q_table_level{level}.npy")
+            level_file = np.load(f"q_table_level{lev}.npy")
         except FileNotFoundError:
-            print(f"Missing {f"q_table_level{level}.npy"}! Train first before running.")
+            print(f"Missing {f"q_table_level{lev}.npy"}! Train first before running.")
             pygame.quit()
             return
         while not done:
@@ -260,6 +261,72 @@ def run_visual(level=0, delay=100):
     pygame.quit()
     print("All levels completed! >^.^<")
 
+
+def run_visual2(level=0, delay=100):
+    pygame.init()
+    pygame.mixer.init()
+
+    
+    info = pygame.display.Info()
+    screen_width = info.current_w
+    screen_height = info.current_h
+    pygame.display.set_mode((1, 1)) # Temporary Display
+
+    # Initializing Environemnt #
+    env = GridWorldEnv(
+        level_files=["levels/level1.txt", "levels/level2.txt", "levels/level3.txt"],
+        asset_dir="assets",
+    )
+    current_level = level
+    env.reset(level)
+
+    # Calculating Screen and Tile Size #
+    grid_rows = len(env.grid)
+    grid_cols = len(env.grid[0])
+    margin = 100
+    max_tile_width = (screen_width - margin) // grid_cols
+    max_tile_height = (screen_height - margin) // grid_rows
+    new_tile_size = min(max_tile_width, max_tile_height, 64)  # Maximum tile
+
+    env.TILE_SIZE = new_tile_size
+    env._load_assets()
+    window_width = grid_cols * env.TILE_SIZE
+    window_height = grid_rows * env.TILE_SIZE
+    screen = pygame.display.set_mode((window_width, window_height))
+    pygame.display.set_caption("TreatQuest: A Visual Run")
+
+    try:
+        q_table = np.load(f"q_table_level{level}.npy")
+    except FileNotFoundError:
+        print(f"Missing {f"q_table_level{level}.npy"}! Train first before running.")
+        pygame.quit()
+        return
+    
+    current_state = env.get_state()
+    done = False
+    steps = 0
+
+    while not done:
+        action = np.argmax(q_table[current_state])
+        next_state, reward, done, info = env.step(action)
+        steps += 1
+
+        screen.fill((0, 0, 0))
+        env.render_pygame(screen)
+        env.render_ui(screen)
+        pygame.display.flip()
+        pygame.time.delay(delay)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return
+
+        current_state = env.get_state()
+
+    pygame.quit()
+    print("All levels completed! >^.^<")
+
         
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -267,8 +334,6 @@ if __name__ == "__main__":
     parser.add_argument("--episodes", type=int, default=1000)
     parser.add_argument("--delay", type=int, default=100)
     args = parser.parse_args()
-    train_by_episode(level=args.level, episodes=args.episodes, delay=args.delay)
-    file = np.load("q_table_level0.npy")
-    # for state in range(file.shape[0]):
-    #     print(f"State {state}: {file[state]}")
-    
+    #train_by_completion(level=1, delay=1)
+    #print("Training was Successful!\n Thank you for watching! >^.^<")
+    run_visual2(level=1, delay=args.delay)    
