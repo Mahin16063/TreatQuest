@@ -193,76 +193,9 @@ def train_by_episode(level=0, episodes=1000, alpha=0.1, gamma=0.95,
         print(f"Training finished. Q-table saved for level {level}.")
     pygame.quit()
     
-    
+
 
 def run_visual(level=0, delay=100):
-    pygame.init()
-    pygame.mixer.init()
-
-    
-    info = pygame.display.Info()
-    screen_width = info.current_w
-    screen_height = info.current_h
-    pygame.display.set_mode((1, 1)) # Temporary Display
-
-    # Initializing Environemnt #
-    env = GridWorldEnv(
-        level_files=["levels/level1.txt", "levels/level2.txt", "levels/level3.txt"],
-        asset_dir="assets",
-    )
-    current_level = level
-    env.reset(level)
-
-    # Calculating Screen and Tile Size #
-    grid_rows = len(env.grid)
-    grid_cols = len(env.grid[0])
-    margin = 100
-    max_tile_width = (screen_width - margin) // grid_cols
-    max_tile_height = (screen_height - margin) // grid_rows
-    new_tile_size = min(max_tile_width, max_tile_height, 64)  # Maximum tile
-
-    env.TILE_SIZE = new_tile_size
-    env._load_assets()
-    window_width = grid_cols * env.TILE_SIZE
-    window_height = grid_rows * env.TILE_SIZE
-    screen = pygame.display.set_mode((window_width, window_height))
-    
-    pygame.display.set_caption("TreatQuest: A Visual Run")
-    for lev in range(level):
-        env.reset(lev)
-        current_state = env.get_state()
-        done = False
-        steps = 0
-        try:
-            level_file = np.load(f"q_table_level{lev}.npy")
-        except FileNotFoundError:
-            print(f"Missing {f"q_table_level{lev}.npy"}! Train first before running.")
-            pygame.quit()
-            return
-        while not done:
-                    action = np.argmax(level_file[current_state])
-                    print(f"Best Action for state {current_state}: {action}")
-                    next_state, reward, done, info = env.step(action)
-                    steps += 1
-
-                    screen.fill((0, 0, 0))
-                    env.render_pygame(screen)
-                    env.render_ui(screen)
-                    pygame.display.flip()
-                    pygame.time.delay(delay)
-
-                    for event in pygame.event.get():
-                        if event.type == pygame.QUIT:
-                            pygame.quit()
-                            return
-
-                    current_state = env.get_state()
-
-    pygame.quit()
-    print("All levels completed! >^.^<")
-
-
-def run_visual2(level=0, delay=100):
     pygame.init()
     pygame.mixer.init()
 
@@ -336,4 +269,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     #train_by_completion(level=1, delay=1)
     #print("Training was Successful!\n Thank you for watching! >^.^<")
-    run_visual2(level=1, delay=args.delay)    
+    run_visual(level=1, delay=args.delay)    
