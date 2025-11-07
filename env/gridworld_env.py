@@ -31,7 +31,9 @@ class GridWorldEnv:
             "treat": pygame.mixer.Sound("assets/sounds/treat.wav"),
             "trap": pygame.mixer.Sound("assets/sounds/trap.wav"),
             "level_complete": pygame.mixer.Sound("assets/sounds/level_complete.wav"),
-            "background_music": pygame.mixer.Sound("assets/sounds/background_music.mp3"),
+            "background_music": pygame.mixer.Sound(
+                "assets/sounds/background_music.mp3"
+            ),
         }
         # path to temporary level file used for learning (copied from original on reset)
         self.temp_level_file = None
@@ -121,7 +123,9 @@ class GridWorldEnv:
                 pass
 
         # Debug to see what it did
-        print(f"[trap anim] level={self.current_level+1} folder={folder} frames={len(self.trap_frames)}")
+        print(
+            f"[trap anim] level={self.current_level+1} folder={folder} frames={len(self.trap_frames)}"
+        )
 
         if not self.trap_frames:
             # fall back to static trap tile if available
@@ -129,7 +133,6 @@ class GridWorldEnv:
             self.trap_frames = [static] if static is not None else [None]
 
         self.trap_ms_per_frame = 500  # ~5 miliseconds wait per frame change
-
 
     # --------------------------------
     # Helper functions for animations
@@ -142,7 +145,6 @@ class GridWorldEnv:
         now = pygame.time.get_ticks()
         idx = (now // self.trap_ms_per_frame) % len(self.trap_frames)
         return self.trap_frames[idx]
-
 
     # ----------------------------
     # Map loading
@@ -195,26 +197,29 @@ class GridWorldEnv:
         try:
             shutil.copyfile(orig_path, temp_path)
             self.temp_level_file = temp_path
-            print(f"\nRESET: Copied original level file {orig_path} to temp file {temp_path}")
+            print(
+                f"\nRESET: Copied original level file {orig_path} to temp file {temp_path}"
+            )
         except Exception as e:
-            print(f"Warning: could not create temp level file: {e}. Using original level file.")
+            print(
+                f"Warning: could not create temp level file: {e}. Using original level file."
+            )
             self.temp_level_file = orig_path
 
         self._load_assets()
         # Load from temp file so modifications are persistent for the learning run
         self.grid = self._load_map(self.temp_level_file)
         self._generate_objects()
-        self._load_trap_animation(tile=self.TILE_SIZE)  
+        self._load_trap_animation(tile=self.TILE_SIZE)
         return self.grid
-
 
     def move_pet(self, action):
         dr, dc = 0, 0
         r, c = self.pet_pos
-        if self.step_count%2==0:
-            num = '2'
+        if self.step_count % 2 == 0:
+            num = "2"
         else:
-            num = ''
+            num = ""
         if action == "UP":
             self.pet_surface = self._safe_load("pets", f"siameseBack{num}.png")
             dr, dc = -1, 0
@@ -252,7 +257,7 @@ class GridWorldEnv:
                 print("Grid before update:")
                 for row in self.grid:
                     print("".join(row))
-                
+
                 try:
                     self.grid[nr][nc] = "."
                     self._write_temp_map()
@@ -326,7 +331,9 @@ class GridWorldEnv:
                             # fallback to default or just the static version of it
                             tile = self.tile_surfaces.get("X")
                             if tile:
-                                screen.blit(tile, (c * self.TILE_SIZE, r * self.TILE_SIZE))
+                                screen.blit(
+                                    tile, (c * self.TILE_SIZE, r * self.TILE_SIZE)
+                                )
                     else:
                         tile = self.tile_surfaces.get(obj)
                         if tile:
