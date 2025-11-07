@@ -400,15 +400,6 @@ class GridWorldEnv:
 
         # Reward logic
         if tile == "finished":
-<<<<<<< HEAD
-            reward = 100
-            done = True
-        elif tile == "trap":
-            reward = -100
-            done = True
-        elif tile == "treat":
-            reward = 50
-=======
             reward = 15
             done = True
         elif tile == "trap":
@@ -416,7 +407,6 @@ class GridWorldEnv:
             done = True
         elif tile == "treat":
             reward = 15
->>>>>>> main
             done = False
         elif tile == "empty":
             reward = -1
