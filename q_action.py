@@ -9,10 +9,6 @@ import argparse
 
 def train_by_completion(level=0, episodes=1000, alpha=0.9, gamma=0.9,
           eps_start=1.0, eps_end=0.05, eps_decay=800, delay=100):
-    """
-    Train the pet until the level is completed.
-    Save the q_table for each level at the end of training.
-    """
     pygame.init()
     pygame.mixer.init()
 
