@@ -23,7 +23,7 @@ def train_by_completion(level=0, episodes=1000, alpha=0.9, gamma=0.9,
 
     # Initializing Environemnt #
     env = GridWorldEnv(
-        level_files=["levels/level1.txt", "levels/level2.txt", "levels/level3.txt"],
+        level_files=["levels/level1.txt", "levels/level2.txt", "levels/level3.txt", "levels/level4.txt"],
         asset_dir="assets",
     )
     current_level = level
@@ -263,7 +263,7 @@ if __name__ == "__main__":
     parser.add_argument("--episodes", type=int, default=1000)
     parser.add_argument("--delay", type=int, default=100)
     args = parser.parse_args()
-    train_by_episode(level=args.level, episodes=args.episodes, delay=args.delay)
+    train_by_completion(level=args.level, episodes=args.episodes, delay=args.delay)
     file = np.load("q_table_level0.npy")
     # for state in range(file.shape[0]):
     #     print(f"State {state}: {file[state]}")
