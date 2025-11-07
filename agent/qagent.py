@@ -57,7 +57,7 @@ class QAgent:
 
         #initialize the Q-table with zeros
         #each entry Q[s,a] represents the estimated value of taking action a in state s
-        self.Q = np.zeros((num_states, num_actions))
+        self.Q = np.ones((num_states, num_actions))
         self.env = env
 
     def select_action(self, state):

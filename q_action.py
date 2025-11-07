@@ -85,6 +85,7 @@ def train_by_completion(level=0, episodes=1000, alpha=0.9, gamma=0.9,
             print(f"Level {level} completed! Moving to next level.")
             level += 1
             if level < len(env.level_files): # Move to Next Level
+                agent.print_Q()
                 env.reset(level)
                 current_state = env.get_state()
                 
@@ -93,6 +94,7 @@ def train_by_completion(level=0, episodes=1000, alpha=0.9, gamma=0.9,
                             eps_start=eps_start, eps_end=eps_end, eps_decay_episodes=eps_decay, env=env)
             else:
                 print("All levels completed!\nCongrats!") # All Levels Done
+                agent.print_Q()
                 pygame.quit()
                 return
         else:
@@ -107,7 +109,7 @@ def train_by_completion(level=0, episodes=1000, alpha=0.9, gamma=0.9,
     print("Training was Successful!\n Thank you for watching! >^.^<")
 
 
-def train_by_episode(level=0, episodes=1000, alpha=0.1, gamma=0.95, 
+def train_by_episode(level=0, episodes=15, alpha=0.9, gamma=0.9, 
                       eps_start=1.0, eps_end=0.05, eps_decay=800, delay=1):
     """
     Train the pet for a fixed number of episodes.
@@ -265,6 +267,6 @@ if __name__ == "__main__":
     parser.add_argument("--episodes", type=int, default=1000)
     parser.add_argument("--delay", type=int, default=100)
     args = parser.parse_args()
-    train_by_completion(level=2, delay=1)
+    train_by_episode(level=0, delay=1)
     #train_by_episodes(level=2, delay=1)
-    run_visual(level=2, delay=200)    
+    #run_visual(level=1, delay=200)    
