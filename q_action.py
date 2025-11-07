@@ -7,7 +7,7 @@ import numpy as np
 import argparse
 
 
-def train_by_completion(level=0, alpha=0.1, gamma=0.95,
+def train_by_completion(level=0, episodes=1000, alpha=0.9, gamma=0.9,
           eps_start=1.0, eps_end=0.05, eps_decay=800, delay=100):
     """
     Train the pet until the level is completed.
@@ -16,10 +16,6 @@ def train_by_completion(level=0, alpha=0.1, gamma=0.95,
     pygame.init()
     pygame.mixer.init()
 
-    #loads the bg music, loops forever #
-    pygame.mixer.music.load("assets/sounds/background_music.mp3")
-    pygame.mixer.music.play(-1)
-    
     info = pygame.display.Info()
     screen_width = info.current_w
     screen_height = info.current_h
@@ -49,9 +45,11 @@ def train_by_completion(level=0, alpha=0.1, gamma=0.95,
     
     pygame.display.set_caption("TreatQuest: A Visual Training Demo")
     agent = QAgent(env.num_states, env.num_actions, alpha=alpha, gamma=gamma,
-                   eps_start=eps_start, eps_end=eps_end, eps_decay_episodes=eps_decay, env=env) # Initializing Agent
+                   eps_start=eps_start, eps_end=eps_end, eps_decay_episodes=eps_decay, env=env)
+    
     rewards = []
     episode = 0
+
     while level < len(env.level_files):
         env.reset(level)
         current_state = env.get_state()
@@ -59,7 +57,6 @@ def train_by_completion(level=0, alpha=0.1, gamma=0.95,
         total_reward = 0
         steps = 0
         episode += 1
-
         while not done and steps < 500:
             action = agent.select_action(current_state)
             next_state, reward, done, info = env.step(action)
@@ -76,14 +73,15 @@ def train_by_completion(level=0, alpha=0.1, gamma=0.95,
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    pygame.quit()
                     np.save(f"q_table_level{level}.npy", agent.Q)
+                    pygame.quit()
                     print(f"Episode {episode} on level {level} finished with total reward {total_reward}")
                     agent.print_Q()
                     return
 
         # Completed Level #
-        if info == "finished":
+        if info["tile"] == "finished":
+            np.save(f"q_table_level{level}.npy", agent.Q)
             print(f"Level {level} completed! Moving to next level.")
             level += 1
             if level < len(env.level_files): # Move to Next Level
@@ -97,14 +95,14 @@ def train_by_completion(level=0, alpha=0.1, gamma=0.95,
                 print("All levels completed!\nCongrats!") # All Levels Done
                 pygame.quit()
                 return
-            np.save(f"q_table_level{level}.npy", agent.Q)
         else:
             env.reset(level)
             current_state = env.get_state()
 
         agent.decay_epsilon(episode)
         rewards.append(total_reward)
-    
+
+    np.save(f"q_table_level{level}.npy", agent.Q)
     pygame.quit()
     print("Training was Successful!\n Thank you for watching! >^.^<")
 
@@ -267,6 +265,6 @@ if __name__ == "__main__":
     parser.add_argument("--episodes", type=int, default=1000)
     parser.add_argument("--delay", type=int, default=100)
     args = parser.parse_args()
-    #train_by_completion(level=1, delay=1)
-    #print("Training was Successful!\n Thank you for watching! >^.^<")
-    run_visual(level=1, delay=args.delay)    
+    train_by_completion(level=2, delay=1)
+    #train_by_episodes(level=2, delay=1)
+    run_visual(level=2, delay=200)    
