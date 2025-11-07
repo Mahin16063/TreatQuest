@@ -7,8 +7,8 @@ import numpy as np
 import argparse
 
 
-def train_by_completion(level=0, episodes=1000, alpha=0.9, gamma=0.9,
-          eps_start=1.0, eps_end=0.05, eps_decay=800, delay=100):
+def train_by_completion(level=0, episodes=1000, alpha=0.3, gamma=0.98,
+          eps_start=1.0, eps_end=0.1, eps_decay=0.999, delay=50):
     pygame.init()
     pygame.mixer.init()
 
