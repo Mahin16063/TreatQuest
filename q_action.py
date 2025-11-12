@@ -23,7 +23,7 @@ def train_by_completion(level=0, episodes=1000, alpha=0.9, gamma=0.9,
 
     # Initializing Environemnt #
     env = GridWorldEnv(
-        level_files=["levels/level1.txt", "levels/level2.txt", "levels/level3.txt"],
+        level_files=["levels/level1.txt", "levels/level2.txt", "levels/level3.txt", "levels/level4.txt"],
         asset_dir="assets",
     )
     current_level = level
