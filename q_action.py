@@ -68,6 +68,14 @@ def train_by_completion(level=0, episodes=1000, alpha=0.9, gamma=0.9,
             screen.fill((0, 0, 0))
             env.render_pygame(screen)
             env.render_ui(screen)
+            mode = "EXPLORE" if agent.epsilon > agent.eps_end else "EXPLOIT"
+            env.render_hud(
+                screen,
+                mode=mode,
+                episode=episode,
+                total_reward=total_reward,
+                epsilon=agent.epsilon
+            )
             pygame.display.flip()
             pygame.time.delay(delay)
 
@@ -173,6 +181,14 @@ def train_by_episode(level=0, episodes=15, alpha=0.9, gamma=0.9,
                 screen.fill((0, 0, 0))
                 env.render_pygame(screen)
                 env.render_ui(screen)
+                mode = "EXPLORE" if agent.epsilon > agent.eps_end else "EXPLOIT"
+                env.render_hud(
+                    screen,
+                    mode=mode,
+                    episode=ep + 1,
+                    total_reward=total_reward,
+                    epsilon=agent.epsilon
+                )
                 pygame.display.flip()
                 pygame.time.delay(delay)
 
@@ -231,7 +247,7 @@ def run_visual(level=0, delay=100):
     try:
         q_table = np.load(f"q_table_level{level}.npy")
     except FileNotFoundError:
-        print(f"Missing {f"q_table_level{level}.npy"}! Train first before running.")
+        print(f"Missing q_table_level{level}.npy! Train first before running.")
         pygame.quit()
         return
     

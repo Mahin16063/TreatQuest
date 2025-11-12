@@ -85,6 +85,7 @@ def main():
         screen.fill((0, 0, 0))
         env.render_pygame(screen)
         env.render_ui(screen)
+        env.render_hud(screen, mode="PLAYER")
         pygame.display.flip()
         clock.tick(10)
 
