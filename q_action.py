@@ -238,41 +238,41 @@ def run_visual(level=0, delay=100):
         max_tile_height = (screen_height - margin) // grid_rows
         new_tile_size = min(max_tile_width, max_tile_height, 64)  # Maximum tile
 
-    env.TILE_SIZE = new_tile_size
-    env._load_assets()
-    window_width = grid_cols * env.TILE_SIZE
-    window_height = grid_rows * env.TILE_SIZE
-    screen = pygame.display.set_mode((window_width, window_height))
-    pygame.display.set_caption("TreatQuest: A Visual Run")
+        env.TILE_SIZE = new_tile_size
+        env._load_assets()
+        window_width = grid_cols * env.TILE_SIZE
+        window_height = grid_rows * env.TILE_SIZE
+        screen = pygame.display.set_mode((window_width, window_height))
+        pygame.display.set_caption("TreatQuest: A Visual Run")
 
-    try:
-        q_table = np.load(f"q_table_level{level}.npy")
-    except FileNotFoundError:
-        print(f"Missing q_table_level{level}.npy! Train first before running.")
-        pygame.quit()
-        return
-    
-    current_state = env.get_state()
-    done = False
-    steps = 0
-
-    while not done:
-        action = np.argmax(q_table[current_state])
-        next_state, reward, done, info = env.step(action)
-        steps += 1
-
-        screen.fill((0, 0, 0))
-        env.render_pygame(screen)
-        env.render_ui(screen)
-        pygame.display.flip()
-        pygame.time.delay(delay)
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                return
-
+        try:
+            q_table = np.load(f"q_table_level{level}.npy")
+        except FileNotFoundError:
+            print(f"Missing q_table_level{level}.npy! Train first before running.")
+            pygame.quit()
+            return
+        
         current_state = env.get_state()
+        done = False
+        steps = 0
+
+        while not done:
+            action = np.argmax(q_table[current_state])
+            next_state, reward, done, info = env.step(action)
+            steps += 1
+
+            screen.fill((0, 0, 0))
+            env.render_pygame(screen)
+            env.render_ui(screen)
+            pygame.display.flip()
+            pygame.time.delay(delay)
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    return
+
+            current_state = env.get_state()
 
     pygame.quit()
     print("All levels completed! >^.^<")
@@ -284,6 +284,6 @@ if __name__ == "__main__":
     parser.add_argument("--episodes", type=int, default=1000)
     parser.add_argument("--delay", type=int, default=100)
     args = parser.parse_args()
-    train_by_episode(level=0, delay=1)
+    train_by_episode(level=0, delay=1, episodes=200)
     #train_by_episodes(level=2, delay=1)
-    #run_visual(level=1, delay=200)    
+    run_visual(level=0, delay=100)    
