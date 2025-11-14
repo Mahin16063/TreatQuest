@@ -197,6 +197,7 @@ def train_by_episode(level=0, episodes=15, alpha=0.9, gamma=0.9,
                         pygame.quit()
                         np.save(f"q_table_level{level}.npy", agent.Q)
                         print("Training interrupted. Q-table saved.")
+                        agent.print_Q()
                         return
 
             agent.decay_epsilon(ep + 1)
@@ -215,7 +216,6 @@ def run_visual(level=0, delay=100):
     pygame.init()
     pygame.mixer.init()
 
-    
     info = pygame.display.Info()
     screen_width = info.current_w
     screen_height = info.current_h
@@ -226,16 +226,17 @@ def run_visual(level=0, delay=100):
         level_files=["levels/level1.txt", "levels/level2.txt", "levels/level3.txt"],
         asset_dir="assets",
     )
-    current_level = level
-    env.reset(level)
+    
+    for lev in range(level, len(env.level_files)):
+        env.reset(lev)
 
-    # Calculating Screen and Tile Size #
-    grid_rows = len(env.grid)
-    grid_cols = len(env.grid[0])
-    margin = 100
-    max_tile_width = (screen_width - margin) // grid_cols
-    max_tile_height = (screen_height - margin) // grid_rows
-    new_tile_size = min(max_tile_width, max_tile_height, 64)  # Maximum tile
+        # Calculating Screen and Tile Size #
+        grid_rows = len(env.grid)
+        grid_cols = len(env.grid[0])
+        margin = 100
+        max_tile_width = (screen_width - margin) // grid_cols
+        max_tile_height = (screen_height - margin) // grid_rows
+        new_tile_size = min(max_tile_width, max_tile_height, 64)  # Maximum tile
 
     env.TILE_SIZE = new_tile_size
     env._load_assets()
