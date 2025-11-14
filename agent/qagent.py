@@ -22,7 +22,7 @@ class QAgent:
         4. Update Q-table using the Bellman equation
         5. Repeat for many episodes
     """
-    def __init__(self, num_states, num_actions, alpha=0.4, gamma=0.8, #initial alpha=0.1, gamma=0.95 #eps_decay_episodes=800
+    def __init__(self, num_states, num_actions, alpha=0.1, gamma=0.95, #initial alpha=0.1, gamma=0.95 #eps_decay_episodes=800
                  eps_start=1.0, eps_end=0.05, eps_decay_episodes=500, env=None):
         """
         Initialize the agent and its learning parameters.
@@ -57,7 +57,7 @@ class QAgent:
 
         #initialize the Q-table with zeros
         #each entry Q[s,a] represents the estimated value of taking action a in state s
-        self.Q = np.zeros((num_states, num_actions))
+        self.Q = np.ones((num_states, num_actions))
         self.env = env
 
     def select_action(self, state):

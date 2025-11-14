@@ -386,6 +386,37 @@ class GridWorldEnv:
             (self.pet_pos[1] * self.TILE_SIZE, self.pet_pos[0] * self.TILE_SIZE),
         )
 
+    def render_hud(self, screen, mode="PLAYER", episode=None, total_reward=None, epsilon=None):
+        """
+        Draws HUD on the top-right corner.
+        Small text, clean layout, supports training and gameplay.
+        """
+
+        font = pygame.font.SysFont("Arial", 18)
+
+        lines = [
+            f"Level: {self.current_level + 1}",
+            f"Steps: {self.step_count}",
+            f"Mode: {mode}",
+        ]
+
+        if episode is not None:
+            lines.append(f"Episode: {episode}")
+
+        if total_reward is not None:
+            lines.append(f"Reward: {total_reward}")
+
+        if epsilon is not None:
+            lines.append(f"Epsilon: {epsilon:.3f}")
+
+        # Draw each line aligned to top-right
+        y = 10
+        for text in lines:
+            surf = font.render(text, True, (255, 255, 255))
+            x = screen.get_width() - surf.get_width() - 15
+            screen.blit(surf, (x, y))
+            y += 22  
+
     def get_state(self):
         """Return the current state as an integer index for Q-learning."""
         cols = len(self.grid[0])
@@ -400,19 +431,19 @@ class GridWorldEnv:
 
         # Reward logic
         if tile == "finished":
-            reward = 10
+            reward = 15
             done = True
         elif tile == "trap":
-            reward = -10
+            reward = -15
             done = True
         elif tile == "treat":
-            reward = 10
+            reward = 15
             done = False
         elif tile == "empty":
             reward = -1
             done = False
         elif tile == "wall":
-            reward = -2
+            reward = -5
             done = False
         else:
             reward = 0
