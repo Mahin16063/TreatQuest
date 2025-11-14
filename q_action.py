@@ -157,14 +157,14 @@ def train_by_episode(level=0, episodes=15, alpha=0.9, gamma=0.9,
     agent = QAgent(env.num_states, env.num_actions, alpha=alpha, gamma=gamma,
                    eps_start=eps_start, eps_end=eps_end, eps_decay_episodes=eps_decay, env=env)
     
-    for level in range(len(env.level_files)):
-        env.reset(level)
+    for lev in range(level, len(env.level_files)):
+        env.reset(lev)
         screen = pygame.display.set_mode(env.get_window_size())
         agent = QAgent(env.num_states, env.num_actions, alpha=alpha, gamma=gamma,
                         eps_start=eps_start, eps_end=eps_end, eps_decay_episodes=eps_decay, env=env)
         rewards = []
         for ep in range(episodes):
-            env.reset(level)
+            env.reset(lev)
             current_state = env.get_state()
             done = False
             total_reward = 0
@@ -284,6 +284,6 @@ if __name__ == "__main__":
     parser.add_argument("--episodes", type=int, default=1000)
     parser.add_argument("--delay", type=int, default=100)
     args = parser.parse_args()
-    train_by_episode(level=0, delay=1, episodes=200)
+    train_by_episode(level=1, delay=1, episodes=10000)
     #train_by_episodes(level=2, delay=1)
-    run_visual(level=0, delay=100)    
+    #run_visual(level=0, delay=100)    
