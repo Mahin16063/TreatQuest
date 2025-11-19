@@ -7,6 +7,8 @@ import numpy as np
 import argparse
 
 
+
+
 def train_by_completion(level=0, episodes=1000, alpha=0.9, gamma=0.9,
           eps_start=1.0, eps_end=0.05, eps_decay=800, delay=100):
     """
@@ -84,7 +86,7 @@ def train_by_completion(level=0, episodes=1000, alpha=0.9, gamma=0.9,
                     np.save(f"q_table_level{level}.npy", agent.Q)
                     pygame.quit()
                     print(f"Episode {episode} on level {level} finished with total reward {total_reward}")
-                    agent.print_Q()
+                    #agent.print_Q()
                     return
 
         # Completed Level #
@@ -93,7 +95,7 @@ def train_by_completion(level=0, episodes=1000, alpha=0.9, gamma=0.9,
             print(f"Level {level} completed! Moving to next level.")
             level += 1
             if level < len(env.level_files): # Move to Next Level
-                agent.print_Q()
+                #agent.print_Q()
                 env.reset(level)
                 current_state = env.get_state()
                 
@@ -102,7 +104,7 @@ def train_by_completion(level=0, episodes=1000, alpha=0.9, gamma=0.9,
                             eps_start=eps_start, eps_end=eps_end, eps_decay_episodes=eps_decay, env=env)
             else:
                 print("All levels completed!\nCongrats!") # All Levels Done
-                agent.print_Q()
+                #agent.print_Q()
                 pygame.quit()
                 return
         else:
@@ -197,7 +199,7 @@ def train_by_episode(level=0, episodes=15, alpha=0.9, gamma=0.9,
                         pygame.quit()
                         np.save(f"q_table_level{level}.npy", agent.Q)
                         print("Training interrupted. Q-table saved.")
-                        agent.print_Q()
+                        #agent.print_Q()
                         return
 
             agent.decay_epsilon(ep + 1)
@@ -277,13 +279,45 @@ def run_visual(level=0, delay=100):
     pygame.quit()
     print("All levels completed! >^.^<")
 
-        
+#easier way for us to run different modes of q_action.py from command line      
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--level", type=int, default=0)
+    parser.add_argument("--level", type=int, default=1)
     parser.add_argument("--episodes", type=int, default=1000)
-    parser.add_argument("--delay", type=int, default=100)
+    parser.add_argument("--delay", type=int, default=50)
     args = parser.parse_args()
-    train_by_episode(level=1, delay=1, episodes=10000)
-    #train_by_episodes(level=2, delay=1)
-    #run_visual(level=0, delay=100)    
+
+    print("\n=== TreatQuest Menu ===")
+    print("1. Train by Completion (train through all levels sequentially)")
+    print("2. Train by Episode (train each level independently)")
+    print("3. Run Visual Mode (watch the pet run using Q-table)")
+    print("4. Quit")
+    print("=======================\n")
+
+    choice = input("Enter your choice (1-4): ").strip()
+
+    if choice == "1":
+        print("\n▶ Starting TRAIN BY COMPLETION...\n")
+        train_by_completion(
+            level=args.level,
+            episodes=args.episodes,
+            delay=args.delay
+        )
+
+    elif choice == "2":
+        print("\n▶ Starting TRAIN BY EPISODE...\n")
+        train_by_episode(
+            level=args.level,
+            episodes=args.episodes,
+            delay=args.delay
+        )
+
+    elif choice == "3":
+        print("\n▶ Starting VISUAL RUN...\n")
+        run_visual(
+            level=args.level,
+            delay=args.delay
+        )
+
+    else:
+        print("\nExiting TreatQuest. Goodbye!\n")   
