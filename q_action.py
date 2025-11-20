@@ -280,6 +280,160 @@ def run_visual(level=0, delay=100):
     print("All levels completed! >^.^<")
 
 #easier way for us to run different modes of q_action.py from command line      
+
+def show_menu():
+    pygame.init()
+
+    # ---------- CONFIG ----------
+    WIDTH, HEIGHT = 1280, 720
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    pygame.display.set_caption("TreatQuest - Main Menu")
+    clock = pygame.time.Clock()
+
+    # Play menu background music (loop = -1)
+    try:
+        pygame.mixer.music.load("menu_music.mp3")
+        pygame.mixer.music.set_volume(0.5)   # 0.0 to 1.0
+        pygame.mixer.music.play(-1, fade_ms=2000)   # Loop forever and fade in
+    except Exception as e:
+        print("Music load error:", e)
+
+
+    # Load button click sound
+    try:
+        click_sound = pygame.mixer.Sound("click.wav")
+        click_sound.set_volume(0.7)
+    except Exception as e:
+        print("Error loading click sound:", e)
+        click_sound = None
+
+    # ---------- LOAD BACKGROUND ----------
+    try:
+        bg = pygame.image.load("menu_bg.png").convert()
+        bg = pygame.transform.scale(bg, (WIDTH, HEIGHT))
+    except Exception:
+        # Fallback if background missing
+        bg = pygame.Surface((WIDTH, HEIGHT))
+        bg.fill((10, 10, 20))
+
+    # ---------- LOAD TITLE ----------
+    title_img = None
+    title_rect = None
+    try:
+        title_img = pygame.image.load("treatquest_title.png").convert_alpha()
+        # Scale down if too big
+        max_title_width = WIDTH * 0.7
+        if title_img.get_width() > max_title_width:
+            scale_factor = max_title_width / title_img.get_width()
+            new_size = (
+                int(title_img.get_width() * scale_factor),
+                int(title_img.get_height() * scale_factor),
+            )
+            title_img = pygame.transform.smoothscale(title_img, new_size)
+        title_rect = title_img.get_rect(center=(WIDTH // 2, HEIGHT // 4))
+    except Exception:
+        # Fallback: render text if image not found
+        font_title = pygame.font.SysFont(None, 80)
+        title_img = font_title.render("", True, (255, 0, 0))
+        title_rect = title_img.get_rect(center=(WIDTH // 2, HEIGHT // 4))
+
+    # ---------- FONTS ----------
+    font_button = pygame.font.SysFont(None, 42)
+
+    # ---------- BUTTON DEFINITIONS ----------
+    # (Label, value to return)
+    button_defs = [
+        ("Train by Completion", "1"),
+        ("Train by Episode", "2"),
+        ("Run Visual Mode", "3"),
+        ("Quit", "4"),
+    ]
+
+    buttons = []
+    button_width = 380
+    button_height = 70
+    spacing = 20
+    total_height = len(button_defs) * button_height + (len(button_defs) - 1) * spacing
+    start_y = HEIGHT // 2 - total_height // 2 + 60  # shift a bit down
+
+    for i, (label, value) in enumerate(button_defs):
+        rect = pygame.Rect(
+            WIDTH // 2 - button_width // 2,
+            start_y + i * (button_height + spacing),
+            button_width,
+            button_height,
+        )
+        buttons.append((rect, label, value))
+
+    # ---------- MAIN LOOP ----------
+    running = True
+    while running:
+        mouse_pos = pygame.mouse.get_pos()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return "4"  # Treat closing as Quit
+
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                for rect, label, value in buttons:
+                    if rect.collidepoint(mouse_pos):
+                        # Play click sound
+                        if click_sound:
+                            click_sound.play()
+                        pygame.mixer.music.fadeout(800)
+                        pygame.mixer.music.stop()
+                        pygame.quit()
+                        return value
+
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    return "4"
+
+        # ---- DRAW ----
+        # Background
+        screen.blit(bg, (0, 0))
+
+        # Dark overlay to make UI readable
+        overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 120))
+        screen.blit(overlay, (0, 0))
+
+        # Title
+        screen.blit(title_img, title_rect.topleft)
+
+        # Buttons
+        for rect, label, value in buttons:
+            hovered = rect.collidepoint(mouse_pos)
+
+            # Semi-transparent "glass" button surface
+            button_surf = pygame.Surface((rect.width, rect.height), pygame.SRCALPHA)
+
+            # Base alpha + extra when hovered
+            base_alpha = 110
+            hover_boost = 60 if hovered else 0
+            alpha = max(0, min(255, base_alpha + hover_boost))
+
+            # Fill with transparent dark color
+            button_surf.fill((15, 15, 25, alpha))
+
+            # Border: brighter on hover
+            border_color = (255, 80, 80) if hovered else (220, 220, 240)
+            pygame.draw.rect(button_surf, border_color, button_surf.get_rect(), 3)
+
+            # Blit button panel
+            screen.blit(button_surf, rect.topleft)
+
+            # Text
+            text_surf = font_button.render(label, True, (255, 255, 255))
+            text_rect = text_surf.get_rect(center=rect.center)
+            screen.blit(text_surf, text_rect.topleft)
+
+        pygame.display.flip()
+        clock.tick(60)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--level", type=int, default=1)
@@ -287,14 +441,7 @@ if __name__ == "__main__":
     parser.add_argument("--delay", type=int, default=50)
     args = parser.parse_args()
 
-    print("\n=== TreatQuest Menu ===")
-    print("1. Train by Completion (train through all levels sequentially)")
-    print("2. Train by Episode (train each level independently)")
-    print("3. Run Visual Mode (watch the pet run using Q-table)")
-    print("4. Quit")
-    print("=======================\n")
-
-    choice = input("Enter your choice (1-4): ").strip()
+    choice = show_menu()
 
     if choice == "1":
         print("\n▶ Starting TRAIN BY COMPLETION...\n")
