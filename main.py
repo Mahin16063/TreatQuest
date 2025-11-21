@@ -23,7 +23,7 @@ def main():
 
     # Create environment
     env = GridWorldEnv(
-        level_files=["levels/level1.txt", "levels/level2.txt", "levels/level3.txt", "levels/level4_txt"],
+        level_files=["levels/level1.txt", "levels/level2.txt", "levels/level3.txt", "levels/level4.txt"],
         asset_dir="assets",
     )
     env.reset(0)

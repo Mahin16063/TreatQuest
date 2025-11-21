@@ -419,7 +419,7 @@ def show_menu():
         ("Train by Completion", "1"),
         ("Train by Episode", "2"),
         ("Run Visual Mode", "3"),
-        ("Manual Mode", "4"),
+        ("Play Manual Mode", "4"),
         ("Quit", "5"),
     ]
 
