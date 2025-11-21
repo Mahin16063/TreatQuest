@@ -393,41 +393,56 @@ def show_help_overlay(screen, width, height, font_title, font_body):
     ]
 
     running = True
+    blink_timer = 0.0
+    blink_interval = 0.6  # seconds for one on/off toggle
     while running:
+        dt = clock.tick(60)  # ms since last frame
+        blink_timer += dt / 1000.0
+
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                # If they hit window close here, just exit overlay
-                running = False
-            elif event.type in (pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN):
-                # Any key or click closes help
+            if event.type in (pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN, pygame.QUIT):
                 running = False
 
-        # Draw overlay
+        # Blink state: ON/OFF alternating every blink_interval seconds
+        show_blink = int(blink_timer / blink_interval) % 2 == 0
+
+        # ---- DRAW OVERLAY ----
         screen.blit(dim_bg, (0, 0))
 
         # Panel
         panel_surf = pygame.Surface((panel_rect.width, panel_rect.height), pygame.SRCALPHA)
-        panel_surf.fill((20, 20, 30, 230))
+        panel_surf.fill((20, 20, 35, 230))
         pygame.draw.rect(panel_surf, (255, 80, 80), panel_surf.get_rect(), 3)
         screen.blit(panel_surf, panel_rect.topleft)
 
         # Title
-        title_surf = font_title.render("Help", True, (255, 200, 180))
+        title_surf = font_title.render("Help", True, (255, 180, 160))
         title_rect = title_surf.get_rect(center=(panel_rect.centerx, panel_rect.top + 40))
         screen.blit(title_surf, title_rect.topleft)
 
-        # Text lines
-        start_y = title_rect.bottom + 20
+        # ---- HELP LINES ----
+        start_y = title_rect.bottom - 5
         line_spacing = 28
-        for i, line in enumerate(help_lines):
-            text_surf = font_body.render(line, True, (235, 235, 230))
+
+        # Draw all lines EXCEPT the last one normally
+        for i, text in enumerate(help_lines[:-1]):
+            text_surf = font_body.render(text, True, (240, 240, 230))
             text_rect = text_surf.get_rect(
                 topleft=(panel_rect.left + 40, start_y + i * line_spacing)
             )
             screen.blit(text_surf, text_rect.topleft)
 
+        # Last line: blink
+        last_text = help_lines[-1]
+        last_index = len(help_lines) - 1
+        if show_blink:
+            last_surf = font_body.render(last_text, True, (255, 230, 220))
+            last_rect = last_surf.get_rect(
+                topleft=(panel_rect.left + 40, start_y + last_index * line_spacing)
+            )
+            screen.blit(last_surf, last_rect.topleft)
+
         pygame.display.flip()
-        clock.tick(60)
 
 
 
@@ -516,7 +531,7 @@ def show_menu():
     button_height = 70
     spacing = 20
     total_height = len(button_defs) * button_height + (len(button_defs) - 1) * spacing
-    start_y = HEIGHT // 2 - total_height // 2 + 60  # shift a bit down
+    start_y = HEIGHT // 2 - total_height // 2 + 100  # shift a bit down
 
     for i, (label, value) in enumerate(button_defs):
         rect = pygame.Rect(
