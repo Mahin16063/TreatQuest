@@ -511,7 +511,6 @@ def show_menu():
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--level", type=int, default=0)
-    parser.add_argument("--level", type=int, default=0)
     parser.add_argument("--episodes", type=int, default=1000)
     parser.add_argument("--delay", type=int, default=1)
     args = parser.parse_args()
