@@ -9,10 +9,10 @@ def main():
     pygame.init()
     pygame.mixer.init()
 
-    #loads the backgorund music throughout the game
-    pygame.mixer.music.load("assets/sounds/background_music.mp3")
-    #loops unlimited once it ends
-    pygame.mixer.music.play(-1)
+    # #loads the backgorund music throughout the game
+    # pygame.mixer.music.load("assets/sounds/background_music.mp3")
+    # #loops unlimited once it ends
+    # pygame.mixer.music.play(-1)
 
     # Get screen size
     info = pygame.display.Info()
@@ -23,7 +23,7 @@ def main():
 
     # Create environment
     env = GridWorldEnv(
-        level_files=["levels/level1.txt", "levels/level2.txt", "levels/level3.txt"],
+        level_files=["levels/level1.txt", "levels/level2.txt", "levels/level3.txt", "levels/level4.txt"],
         asset_dir="assets",
     )
     env.reset(0)

@@ -1,3 +1,5 @@
+#################### Importing Essential Libraries and APIs #######################
+
 import os
 os.environ["SDL_VIDEO_CENTERED"] = "1"
 from env.gridworld_env import GridWorldEnv
@@ -5,9 +7,56 @@ from agent.qagent import QAgent
 import pygame
 import numpy as np
 import argparse
+import subprocess
+import sys
+
+#################### Level Background Music Functions #############################
+
+LEVEL_MUSIC = {
+    0: "assets/sounds/level_1.mp3",
+    1: "assets/sounds/level_2.mp3",
+    2: "assets/sounds/level_3.mp3",
+    3: "assets/sounds/level_4.mp3",
+}
+
+def play_level_music(level_index: int, volume: float = 0.5):
+    """Load and loop the background music for the given level index."""
+    filename = LEVEL_MUSIC.get(level_index)
+    if not filename:
+        print(f"No music configured for level {level_index}")
+        pygame.mixer.music.stop()
+        return
+
+    try:
+        pygame.mixer.music.load(filename)
+        pygame.mixer.music.set_volume(volume)
+        # Loop forever with a small fade-in
+        pygame.mixer.music.play(-1, fade_ms=800)
+        print(f"Now playing music for level {level_index}: {filename}")
+    except Exception as e:
+        print(f"Error loading music for level {level_index}: {e}")
+        pygame.mixer.music.stop()
+
+########################### Function to Run Manual Mode #############################
+
+def run_manual_play():
+    """Run the main.py file for manual gameplay"""
+    print("\n▶ Starting MANUAL PLAY...\n")
+    pygame.quit()  # Close the current Pygame instance
+    
+    try:
+        # Run main.py as a separate process
+        subprocess.run([sys.executable, "main.py"])
+    except FileNotFoundError:
+        print("Error: main.py not found in the root directory!")
+    except Exception as e:
+        print(f"Error running main.py: {e}")
+    
+    # After manual play finishes, show the menu again
+    main()
 
 
-
+######################## Training Modes #####################################################
 
 def train_by_completion(level=0, episodes=1000, alpha=0.9, gamma=0.9,
           eps_start=1.0, eps_end=0.05, eps_decay=800, delay=100):
@@ -54,6 +103,10 @@ def train_by_completion(level=0, episodes=1000, alpha=0.9, gamma=0.9,
 
     while level < len(env.level_files):
         env.reset(level)
+
+        pygame.mixer.music.stop()
+        play_level_music(level, volume=0.5)
+
         current_state = env.get_state()
         done = False
         total_reward = 0
@@ -84,6 +137,7 @@ def train_by_completion(level=0, episodes=1000, alpha=0.9, gamma=0.9,
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     np.save(f"q_table_level{level}.npy", agent.Q)
+                    pygame.mixer.music.stop()
                     pygame.quit()
                     print(f"Episode {episode} on level {level} finished with total reward {total_reward}")
                     #agent.print_Q()
@@ -105,6 +159,7 @@ def train_by_completion(level=0, episodes=1000, alpha=0.9, gamma=0.9,
             else:
                 print("All levels completed!\nCongrats!") # All Levels Done
                 #agent.print_Q()
+                pygame.mixer.music.stop()
                 pygame.quit()
                 return
         else:
@@ -115,6 +170,7 @@ def train_by_completion(level=0, episodes=1000, alpha=0.9, gamma=0.9,
         rewards.append(total_reward)
 
     np.save(f"q_table_level{level}.npy", agent.Q)
+    pygame.mixer.music.stop()
     pygame.quit()
     print("Training was Successful!\n Thank you for watching! >^.^<")
 
@@ -161,6 +217,10 @@ def train_by_episode(level=0, episodes=15, alpha=0.9, gamma=0.9,
     
     for lev in range(level, len(env.level_files)):
         env.reset(lev)
+
+        pygame.mixer.music.stop()
+        play_level_music(level, volume=0.5)
+
         screen = pygame.display.set_mode(env.get_window_size())
         agent = QAgent(env.num_states, env.num_actions, alpha=alpha, gamma=gamma,
                         eps_start=eps_start, eps_end=eps_end, eps_decay_episodes=eps_decay, env=env)
@@ -196,6 +256,7 @@ def train_by_episode(level=0, episodes=15, alpha=0.9, gamma=0.9,
 
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
+                        pygame.mixer.music.stop()
                         pygame.quit()
                         np.save(f"q_table_level{level}.npy", agent.Q)
                         print("Training interrupted. Q-table saved.")
@@ -210,11 +271,15 @@ def train_by_episode(level=0, episodes=15, alpha=0.9, gamma=0.9,
         
         np.save(f"q_table_level{level}.npy", agent.Q)
         print(f"Training finished. Q-table saved for level {level}.")
+    pygame.mixer.music.stop()
     pygame.quit()
     
 
 
 def run_visual(level=0, delay=100):
+    """
+    Intakes a completed Q-table and chooses the best course of action
+    """
     pygame.init()
     pygame.mixer.init()
 
@@ -232,6 +297,10 @@ def run_visual(level=0, delay=100):
     for lev in range(level, len(env.level_files)):
         env.reset(lev)
 
+        # new music for each level
+        pygame.mixer.music.stop()
+        play_level_music(lev, volume=0.5)
+
         # Calculating Screen and Tile Size #
         grid_rows = len(env.grid)
         grid_cols = len(env.grid[0])
@@ -248,6 +317,7 @@ def run_visual(level=0, delay=100):
         pygame.display.set_caption("TreatQuest: A Visual Run")
 
         try:
+            q_table = np.load(f"q_table_level{lev}.npy")
             q_table = np.load(f"q_table_level{lev}.npy")
         except FileNotFoundError:
             print(f"Missing q_table_level{lev}.npy! Train first before running.")
@@ -271,14 +341,17 @@ def run_visual(level=0, delay=100):
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    pygame.mixer.music.stop()
                     pygame.quit()
                     return
 
             current_state = env.get_state()
-
+    pygame.mixer.music.stop()
     pygame.quit()
     print("All levels completed! >^.^<")
 
+
+################################## Menu Functions #####################################################
 #easier way for us to run different modes of q_action.py from command line      
 
 def show_menu():
@@ -309,7 +382,7 @@ def show_menu():
 
     # ---------- LOAD BACKGROUND ----------
     try:
-        bg = pygame.image.load("menu_bg.png").convert()
+        bg = pygame.image.load("menu_bg2.png").convert()
         bg = pygame.transform.scale(bg, (WIDTH, HEIGHT))
     except Exception:
         # Fallback if background missing
@@ -346,7 +419,8 @@ def show_menu():
         ("Train by Completion", "1"),
         ("Train by Episode", "2"),
         ("Run Visual Mode", "3"),
-        ("Quit", "4"),
+        ("Play Manual Mode", "4"),
+        ("Quit", "5"),
     ]
 
     buttons = []
@@ -373,7 +447,7 @@ def show_menu():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                return "4"  # Treat closing as Quit
+                return "5"  # Treat closing as Quit
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 for rect, label, value in buttons:
@@ -390,7 +464,7 @@ def show_menu():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
-                    return "4"
+                    return "5"
 
         # ---- DRAW ----
         # Background
@@ -434,8 +508,9 @@ def show_menu():
         pygame.display.flip()
         clock.tick(60)
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--level", type=int, default=0)
     parser.add_argument("--level", type=int, default=0)
     parser.add_argument("--episodes", type=int, default=1000)
     parser.add_argument("--delay", type=int, default=1)
@@ -465,6 +540,12 @@ if __name__ == "__main__":
             level=args.level,
             delay=150
         )
+    elif choice == "4":
+        run_manual_play()
 
     else:
-        print("\nExiting TreatQuest. Goodbye!\n")   
+        print("\nExiting TreatQuest. Goodbye!\n")    
+
+
+if __name__ == "__main__":
+    main()

@@ -31,7 +31,7 @@ class GridWorldEnv:
             "treat": pygame.mixer.Sound("assets/sounds/treat.wav"),
             "trap": pygame.mixer.Sound("assets/sounds/trap.wav"),
             "level_complete": pygame.mixer.Sound("assets/sounds/level_complete.wav"),
-            "background_music": pygame.mixer.Sound("assets/sounds/background_music.mp3"),
+            "background_music": pygame.mixer.Sound("assets/sounds/level_2.mp3"),
         }
         # path to temporary level file used for learning (copied from original on reset)
         self.temp_level_file = None
