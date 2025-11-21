@@ -382,7 +382,7 @@ def show_menu():
 
     # ---------- LOAD BACKGROUND ----------
     try:
-        bg = pygame.image.load("menu_bg.png").convert()
+        bg = pygame.image.load("menu_bg2.png").convert()
         bg = pygame.transform.scale(bg, (WIDTH, HEIGHT))
     except Exception:
         # Fallback if background missing
@@ -419,8 +419,8 @@ def show_menu():
         ("Train by Completion", "1"),
         ("Train by Episode", "2"),
         ("Run Visual Mode", "3"),
-        ("Quit", "4"),
-        ("Play Manual Mode", "5"),
+        ("Manual Mode", "4"),
+        ("Quit", "5"),
     ]
 
     buttons = []
@@ -447,7 +447,7 @@ def show_menu():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                return "4"  # Treat closing as Quit
+                return "5"  # Treat closing as Quit
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 for rect, label, value in buttons:
@@ -464,7 +464,7 @@ def show_menu():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
-                    return "4"
+                    return "5"
 
         # ---- DRAW ----
         # Background
@@ -539,7 +539,7 @@ def main():
             level=args.level,
             delay=args.delay
         )
-    elif choice == "5":
+    elif choice == "4":
         run_manual_play()
 
     else:
