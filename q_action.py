@@ -225,7 +225,7 @@ def run_visual(level=0, delay=100):
 
     # Initializing Environemnt #
     env = GridWorldEnv(
-        level_files=["levels/level1.txt", "levels/level2.txt", "levels/level3.txt"],
+        level_files=["levels/level1.txt", "levels/level2.txt", "levels/level3.txt", "levels/level4.txt"],
         asset_dir="assets",
     )
     
@@ -248,9 +248,9 @@ def run_visual(level=0, delay=100):
         pygame.display.set_caption("TreatQuest: A Visual Run")
 
         try:
-            q_table = np.load(f"q_table_level{level}.npy")
+            q_table = np.load(f"q_table_level{lev}.npy")
         except FileNotFoundError:
-            print(f"Missing q_table_level{level}.npy! Train first before running.")
+            print(f"Missing q_table_level{lev}.npy! Train first before running.")
             pygame.quit()
             return
         
@@ -436,9 +436,9 @@ def show_menu():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--level", type=int, default=1)
+    parser.add_argument("--level", type=int, default=0)
     parser.add_argument("--episodes", type=int, default=1000)
-    parser.add_argument("--delay", type=int, default=50)
+    parser.add_argument("--delay", type=int, default=1)
     args = parser.parse_args()
 
     choice = show_menu()
@@ -446,7 +446,7 @@ if __name__ == "__main__":
     if choice == "1":
         print("\n▶ Starting TRAIN BY COMPLETION...\n")
         train_by_completion(
-            level=args.level,
+            level=3,
             episodes=args.episodes,
             delay=args.delay
         )
@@ -463,7 +463,7 @@ if __name__ == "__main__":
         print("\n▶ Starting VISUAL RUN...\n")
         run_visual(
             level=args.level,
-            delay=args.delay
+            delay=150
         )
 
     else:
