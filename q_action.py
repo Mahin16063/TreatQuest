@@ -354,12 +354,98 @@ def run_visual(level=0, delay=100):
 ################################## Menu Functions #####################################################
 #easier way for us to run different modes of q_action.py from command line      
 
+# helper function to have a screen for Menu guides explanation
+def show_help_overlay(screen, width, height, font_title, font_body):
+    """Block the menu and show a modal help window until user closes it."""
+    clock = pygame.time.Clock()
+
+    # Prebuild a semi-transparent dark background
+    dim_bg = pygame.Surface((width, height), pygame.SRCALPHA)
+    dim_bg.fill((0, 0, 0, 180))
+
+    # Panel rectangle
+    panel_width = int(width * 0.7)
+    panel_height = int(height * 0.6)
+    panel_rect = pygame.Rect(
+        (width - panel_width) // 2,
+        (height - panel_height) // 2,
+        panel_width,
+        panel_height,
+    )
+
+    help_lines = [
+        "Train by Completion:",
+        "    • Trains through all levels sequentially and move to next level after finishing each.",
+        "",
+        "Train by Episode:",
+        "    • Trains one level at a time for a fixed number of episodes.",
+        "",
+        "Run Visual Mode:",
+        "    • Uses the saved Q-tables to let the pet play the game, so you can sit back and watch",
+        "",
+        "Play Manual Mode:",
+        "    • Lets you play the map yourself, YOU are the agent"
+        "",
+        "Quit:",
+        "    • Returns to desktop.",
+        "",
+        "Press ESC or click anywhere to close this help window.",
+    ]
+
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                # If they hit window close here, just exit overlay
+                running = False
+            elif event.type in (pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN):
+                # Any key or click closes help
+                running = False
+
+        # Draw overlay
+        screen.blit(dim_bg, (0, 0))
+
+        # Panel
+        panel_surf = pygame.Surface((panel_rect.width, panel_rect.height), pygame.SRCALPHA)
+        panel_surf.fill((20, 20, 30, 230))
+        pygame.draw.rect(panel_surf, (255, 80, 80), panel_surf.get_rect(), 3)
+        screen.blit(panel_surf, panel_rect.topleft)
+
+        # Title
+        title_surf = font_title.render("Help", True, (255, 200, 180))
+        title_rect = title_surf.get_rect(center=(panel_rect.centerx, panel_rect.top + 40))
+        screen.blit(title_surf, title_rect.topleft)
+
+        # Text lines
+        start_y = title_rect.bottom + 20
+        line_spacing = 28
+        for i, line in enumerate(help_lines):
+            text_surf = font_body.render(line, True, (235, 235, 230))
+            text_rect = text_surf.get_rect(
+                topleft=(panel_rect.left + 40, start_y + i * line_spacing)
+            )
+            screen.blit(text_surf, text_rect.topleft)
+
+        pygame.display.flip()
+        clock.tick(60)
+
+
+
 def show_menu():
     pygame.init()
 
     # ---------- CONFIG ----------
     WIDTH, HEIGHT = 1280, 720
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
+
+    HELP_SIZE = 40 # help button config
+    help_rect = pygame.Rect(
+        WIDTH - HELP_SIZE - 20,    # 20 px from right
+        HEIGHT - HELP_SIZE - 20,   # 20 px from bottom
+        HELP_SIZE,
+        HELP_SIZE,
+    )
+
     pygame.display.set_caption("TreatQuest - Main Menu")
     clock = pygame.time.Clock()
 
@@ -412,6 +498,8 @@ def show_menu():
 
     # ---------- FONTS ----------
     font_button = pygame.font.SysFont(None, 42)
+    font_help_title = pygame.font.SysFont(None, 38)
+    font_help_body = pygame.font.SysFont(None, 24)
 
     # ---------- BUTTON DEFINITIONS ----------
     # (Label, value to return)
@@ -450,6 +538,13 @@ def show_menu():
                 return "5"  # Treat closing as Quit
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+
+                # --- HELP BUTTON CHECK FIRST ---
+                if help_rect.collidepoint(mouse_pos):
+                    show_help_overlay(screen, WIDTH, HEIGHT, font_help_title, font_help_body)
+                    # Do NOT quit or stop music — return to menu loop
+                    continue   
+
                 for rect, label, value in buttons:
                     if rect.collidepoint(mouse_pos):
                         # Play click sound
@@ -505,8 +600,27 @@ def show_menu():
             text_rect = text_surf.get_rect(center=rect.center)
             screen.blit(text_surf, text_rect.topleft)
 
+        # ---- HELP "?" BUTTON ----
+        help_hovered = help_rect.collidepoint(mouse_pos)
+
+        help_surf = pygame.Surface((help_rect.width, help_rect.height), pygame.SRCALPHA)
+        base_alpha = 150
+        hover_alpha = 70 if help_hovered else 0
+        help_surf.fill((20, 20, 35, base_alpha + hover_alpha))
+
+        border_color = (255, 200, 120) if help_hovered else (230, 230, 230)
+        pygame.draw.rect(help_surf, border_color, help_surf.get_rect(), 2)
+
+        screen.blit(help_surf, help_rect.topleft)
+
+        # Draw "?" label
+        q_surf = font_button.render("?", True, (255, 255, 255))
+        q_rect = q_surf.get_rect(center=help_rect.center)
+        screen.blit(q_surf, q_rect.topleft)
+
         pygame.display.flip()
         clock.tick(60)
+
 
 def main():
     parser = argparse.ArgumentParser()
