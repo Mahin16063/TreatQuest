@@ -7,6 +7,8 @@ from agent.qagent import QAgent
 import pygame
 import numpy as np
 import argparse
+import subprocess
+import sys
 
 #################### Level Background Music Functions #############################
 
@@ -34,6 +36,24 @@ def play_level_music(level_index: int, volume: float = 0.5):
     except Exception as e:
         print(f"Error loading music for level {level_index}: {e}")
         pygame.mixer.music.stop()
+
+########################### Function to Run Manual Mode #############################
+
+def run_manual_play():
+    """Run the main.py file for manual gameplay"""
+    print("\n▶ Starting MANUAL PLAY...\n")
+    pygame.quit()  # Close the current Pygame instance
+    
+    try:
+        # Run main.py as a separate process
+        subprocess.run([sys.executable, "main.py"])
+    except FileNotFoundError:
+        print("Error: main.py not found in the root directory!")
+    except Exception as e:
+        print(f"Error running main.py: {e}")
+    
+    # After manual play finishes, show the menu again
+    main()
 
 
 ######################## Training Modes #####################################################
@@ -488,7 +508,7 @@ def show_menu():
         pygame.display.flip()
         clock.tick(60)
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--level", type=int, default=0)
     parser.add_argument("--episodes", type=int, default=1000)
@@ -519,6 +539,12 @@ if __name__ == "__main__":
             level=args.level,
             delay=args.delay
         )
+    elif choice == "5":
+        run_manual_play()
 
     else:
-        print("\nExiting TreatQuest. Goodbye!\n")   
+        print("\nExiting TreatQuest. Goodbye!\n")    
+
+
+if __name__ == "__main__":
+    main()
