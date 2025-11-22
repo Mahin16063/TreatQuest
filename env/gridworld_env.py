@@ -31,9 +31,7 @@ class GridWorldEnv:
             "treat": pygame.mixer.Sound("assets/sounds/treat.wav"),
             "trap": pygame.mixer.Sound("assets/sounds/trap.wav"),
             "level_complete": pygame.mixer.Sound("assets/sounds/level_complete.wav"),
-            "background_music": pygame.mixer.Sound(
-                "assets/sounds/background_music.mp3"
-            ),
+            "background_music": pygame.mixer.Sound("assets/sounds/level_2.mp3"),
         }
         # path to temporary level file used for learning (copied from original on reset)
         self.temp_level_file = None
@@ -392,6 +390,37 @@ class GridWorldEnv:
             self.pet_surface,
             (self.pet_pos[1] * self.TILE_SIZE, self.pet_pos[0] * self.TILE_SIZE),
         )
+
+    def render_hud(self, screen, mode="PLAYER", episode=None, total_reward=None, epsilon=None):
+        """
+        Draws HUD on the top-right corner.
+        Small text, clean layout, supports training and gameplay.
+        """
+
+        font = pygame.font.SysFont("Arial", 18)
+
+        lines = [
+            f"Level: {self.current_level + 1}",
+            f"Steps: {self.step_count}",
+            f"Mode: {mode}",
+        ]
+
+        if episode is not None:
+            lines.append(f"Episode: {episode}")
+
+        if total_reward is not None:
+            lines.append(f"Reward: {total_reward}")
+
+        if epsilon is not None:
+            lines.append(f"Epsilon: {epsilon:.3f}")
+
+        # Draw each line aligned to top-right
+        y = 10
+        for text in lines:
+            surf = font.render(text, True, (255, 255, 255))
+            x = screen.get_width() - surf.get_width() - 15
+            screen.blit(surf, (x, y))
+            y += 22  
 
     def get_state(self):
         """Return the current state as an integer index for Q-learning."""
