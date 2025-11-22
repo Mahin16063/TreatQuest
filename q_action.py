@@ -10,6 +10,8 @@ import argparse
 import subprocess
 import sys
 
+EPISODE_LEVEL = None
+
 #################### Level Background Music Functions #############################
 
 LEVEL_MUSIC = {
@@ -205,7 +207,7 @@ def train_by_episode(level=0, episodes=15, alpha=0.9, gamma=0.9,
 
     # Initializing Environemnt #
     env = GridWorldEnv(
-        level_files=["levels/level1.txt", "levels/level2.txt", "levels/level3.txt"],
+        level_files=["levels/level1.txt", "levels/level2.txt", "levels/level3.txt", "levels/level4.txt"],
         asset_dir="assets",
     )
     current_level = level
@@ -459,6 +461,136 @@ def show_help_overlay(screen, width, height, font_title, font_body):
         pygame.display.flip()
 
 
+def show_level_select_overlay(screen, width, height, font_title, font_button, num_levels: int = 4) -> int | None:
+    """
+    Show an overlay that lets the user pick which level to train by episode.
+    Returns the chosen level index (0-based), or None if the user presses Back or exits.
+    This does NOT stop music or quit pygame – main menu keeps running.
+    """
+    clock = pygame.time.Clock()
+
+    # Dimmed background over the existing menu
+    dim_bg = pygame.Surface((width, height), pygame.SRCALPHA)
+    dim_bg.fill((0, 0, 0, 180))
+
+    # Center panel for level buttons
+    panel_width = int(width * 0.7)
+    panel_height = int(height * 0.5)
+    panel_rect = pygame.Rect(
+        (width - panel_width) // 2,
+        (height - panel_height) // 2,
+        panel_width,
+        panel_height,
+    )
+
+    # Back button (bottom-right corner of the whole screen)
+    BACK_SIZE = 50
+    back_rect = pygame.Rect(
+        width - BACK_SIZE - 20,
+        height - BACK_SIZE - 20,
+        BACK_SIZE,
+        BACK_SIZE,
+    )
+
+    # Level buttons (Level 1..num_levels)
+    buttons = []
+    button_width = 180
+    button_height = 60
+    spacing = 20
+
+    total_width = num_levels * button_width + (num_levels - 1) * spacing
+    start_x = width // 2 - total_width // 2
+    center_y = panel_rect.centery + 20
+
+    for i in range(num_levels):
+        rect = pygame.Rect(
+            start_x + i * (button_width + spacing),
+            center_y - button_height // 2,
+            button_width,
+            button_height,
+        )
+        buttons.append((rect, i))  # (rect, level_index)
+
+    running = True
+    selected_level = None
+
+    while running:
+        dt = clock.tick(60)
+        mouse_pos = pygame.mouse.get_pos()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                # Don't kill pygame here – just exit overlay and let caller handle it
+                return None
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    # ESC = back to main menu
+                    return None
+
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                # Back button bottom-right
+                if back_rect.collidepoint(mouse_pos):
+                    return None
+
+                # Level buttons
+                for rect, lvl in buttons:
+                    if rect.collidepoint(mouse_pos):
+                        selected_level = lvl
+                        return selected_level
+
+        # --- DRAW ---
+        # Keep existing menu behind, just overlay on top
+        screen.blit(dim_bg, (0, 0))
+
+        # Panel
+        panel_surf = pygame.Surface((panel_rect.width, panel_rect.height), pygame.SRCALPHA)
+        panel_surf.fill((20, 20, 35, 230))
+        pygame.draw.rect(panel_surf, (255, 80, 80), panel_surf.get_rect(), 3)
+        screen.blit(panel_surf, panel_rect.topleft)
+
+        # Title
+        title_surf = font_title.render("Select Level to Train", True, (255, 220, 200))
+        title_rect = title_surf.get_rect(center=(panel_rect.centerx, panel_rect.top + 50))
+        screen.blit(title_surf, title_rect.topleft)
+
+        # Level buttons
+        for rect, lvl in buttons:
+            hovered = rect.collidepoint(mouse_pos)
+            btn_surf = pygame.Surface((rect.width, rect.height), pygame.SRCALPHA)
+            base_alpha = 140
+            hover_boost = 70 if hovered else 0
+            btn_surf.fill((25, 25, 45, base_alpha + hover_boost))
+            pygame.draw.rect(
+                btn_surf,
+                (255, 100, 100) if hovered else (230, 230, 240),
+                btn_surf.get_rect(),
+                3
+            )
+            screen.blit(btn_surf, rect.topleft)
+
+            text = font_button.render(f"Level {lvl+1}", True, (255, 255, 255))
+            text_rect = text.get_rect(center=rect.center)
+            screen.blit(text, text_rect.topleft)
+
+        # Back button (bottom-right)
+        back_hover = back_rect.collidepoint(mouse_pos)
+        back_surf = pygame.Surface((back_rect.width, back_rect.height), pygame.SRCALPHA)
+        back_surf.fill((25, 25, 45, 180 if back_hover else 140))
+        pygame.draw.rect(
+            back_surf,
+            (255, 120, 120) if back_hover else (230, 230, 230),
+            back_surf.get_rect(),
+            3
+        )
+        screen.blit(back_surf, back_rect.topleft)
+
+        back_text = font_button.render("<", True, (255, 255, 255))
+        back_text_rect = back_text.get_rect(center=back_rect.center)
+        screen.blit(back_text, back_text_rect.topleft)
+
+        pygame.display.flip()
+
 
 def show_menu():
     pygame.init()
@@ -576,13 +708,36 @@ def show_menu():
 
                 for rect, label, value in buttons:
                     if rect.collidepoint(mouse_pos):
-                        # Play click sound
-                        if click_sound:
-                            click_sound.play()
-                        pygame.mixer.music.fadeout(800)
-                        pygame.mixer.music.stop()
-                        pygame.quit()
-                        return value
+
+                        # Train by Episode → open level-select overlay
+                        if label == "Train by Episode":
+                            if click_sound:
+                                click_sound.play()
+
+                            global EPISODE_LEVEL
+                            EPISODE_LEVEL = show_level_select_overlay(
+                                screen, WIDTH, HEIGHT,
+                                font_help_title, font_button,
+                                num_levels=4
+                            )
+
+                            if EPISODE_LEVEL is not None:
+                                pygame.mixer.music.fadeout(800)
+                                pygame.mixer.music.stop()
+                                pygame.quit()
+                                return "2"  # same as before (no tuple!!)
+
+                            # if back was pressed
+                            break
+
+                        # All other buttons (Completion, Visual Mode, Manual, Quit) behave like before
+                        else:
+                            if click_sound:
+                                click_sound.play()
+                            pygame.mixer.music.fadeout(800)
+                            pygame.mixer.music.stop()
+                            pygame.quit()
+                            return value
 
 
             if event.type == pygame.KEYDOWN:
@@ -651,6 +806,8 @@ def show_menu():
         clock.tick(60)
 
 
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--level", type=int, default=0)
@@ -671,7 +828,7 @@ def main():
     elif choice == "2":
         print("\n▶ Starting TRAIN BY EPISODE...\n")
         train_by_episode(
-            level=args.level,
+            level=EPISODE_LEVEL,        # ← Use the stored level
             episodes=args.episodes,
             delay=args.delay
         )
