@@ -480,7 +480,7 @@ def show_menu():
 
     # Play menu background music (loop = -1)
     try:
-        pygame.mixer.music.load("menu_music.mp3")
+        pygame.mixer.music.load("assets/sounds/menu_music.mp3")
         pygame.mixer.music.set_volume(0.5)   # 0.0 to 1.0
         pygame.mixer.music.play(-1, fade_ms=2000)   # Loop forever and fade in
     except Exception as e:
@@ -489,7 +489,7 @@ def show_menu():
 
     # Load button click sound
     try:
-        click_sound = pygame.mixer.Sound("click.wav")
+        click_sound = pygame.mixer.Sound("assets/sounds/click.wav")
         click_sound.set_volume(0.7)
     except Exception as e:
         print("Error loading click sound:", e)
@@ -497,7 +497,7 @@ def show_menu():
 
     # ---------- LOAD BACKGROUND ----------
     try:
-        bg = pygame.image.load("menu_bg2.png").convert()
+        bg = pygame.image.load("assets/menu_bg/menu_bg2.png").convert()
         bg = pygame.transform.scale(bg, (WIDTH, HEIGHT))
     except Exception:
         # Fallback if background missing
