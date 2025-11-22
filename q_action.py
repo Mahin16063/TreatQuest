@@ -59,10 +59,17 @@ def run_manual_play():
 ######################## Training Modes #####################################################
 
 def train_by_completion(level=0, episodes=1000, alpha=0.9, gamma=0.9,
-          eps_start=1.0, eps_end=0.05, eps_decay=800, delay=100):
+          eps_start=1.0, eps_end=0.05, eps_decay=800, delay=1000):
     """
     Train the pet until the level is completed.
     Save the q_table for each level at the end of training.
+
+    alpha = learning rate (How fast does the agent update the Q-values?)
+    gamma = discount factor (How much does the agent value future rewards? 0-1 = none to high)
+    eps_start = starting epsilon for exploration (0-1 = full exploit to full explore)
+    eps_end = minimum epsilon (Even after lots of training, the pet will still make 5% random moves in this case)
+    eps_decay = number of episodes to decay epsilon (higher = slower decay, here It will take ≈800 episodes to go from epsilon 1.0 → 0.05)
+    delay = delay in milliseconds for rendering (0.1 seconds per step or higher recommended for visual clarity)
     """
     pygame.init()
     pygame.mixer.init()
@@ -180,6 +187,13 @@ def train_by_episode(level=0, episodes=15, alpha=0.9, gamma=0.9,
     """
     Train the pet for a fixed number of episodes.
     Save the q_table for each level at the end of training.
+
+    alpha = learning rate (How fast does the agent update the Q-values?)
+    gamma = discount factor (How much does the agent value future rewards? 0-1 = none to high)
+    eps_start = starting epsilon for exploration (0-1 = full exploit to full explore)
+    eps_end = minimum epsilon (Even after lots of training, the pet will still make 5% random moves in this case)
+    eps_decay = number of episodes to decay epsilon (higher = slower decay, here It will take ≈800 episodes to go from epsilon 1.0 → 0.05)
+    delay = delay in milliseconds for rendering (0.1 seconds per step or higher recommended for visual clarity)
     """
     pygame.init()
     pygame.mixer.init()
@@ -641,7 +655,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--level", type=int, default=0)
     parser.add_argument("--episodes", type=int, default=1000)
-    parser.add_argument("--delay", type=int, default=1)
+    parser.add_argument("--delay", type=int, default=100)
     args = parser.parse_args()
 
     choice = show_menu()
@@ -649,7 +663,7 @@ def main():
     if choice == "1":
         print("\n▶ Starting TRAIN BY COMPLETION...\n")
         train_by_completion(
-            level=3,
+            level=args.level,
             episodes=args.episodes,
             delay=args.delay
         )
