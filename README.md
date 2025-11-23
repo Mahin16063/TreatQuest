@@ -65,9 +65,10 @@ The game includes multiple levels with increasing complexity.
     To run the cat to observe how it collects all treats without hitting any traps: python(3) q_action.py; then select run visual mode (NOTE: ONLY RUN THE CAT WHEN YOU ARE SURE IT HAS BEEN TRAINED TO AVOID UNINTENDED BEHAVIOUR)
 
 # Video Description:
-    In the link there is a short video description of our project: 
+    In the link there is a short video description of our project: https://youtu.be/CPQcyawK4_c
 
 # Contributing
     Pull requests are welcome! For major changes, please open an issue first.
+
 
 
