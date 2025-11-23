@@ -1,8 +1,9 @@
 # TreatQuest
-![TreatQuest Screenshot](Screenshots/Level4.png)
+![TreatQuest Screenshot](Screenshots/TreatquestCat.png)
 TreatQuest is a playful reinforcement learning challenge where you teach a virtual pet to navigate through multiple levels and collect treats while avoiding “traps” in a 2D grid. The pet starts clueless, wandering around, but through trial-and-error and Q Learning it learns which moves bring rewards and which don’t (an optimal policy). By the end, you’ll have a smart companion that finds the fastest route to snacks!
 
-# Project Structure
+## Project Structure
+```
 TreatQuest/
 │
 ├── agent/
@@ -42,7 +43,18 @@ TreatQuest/
 ├── README.md # Project documentation
 ├── test_venv.py # Testing environment setup
 └── train.py # Training script (non-level-based)
+```
+# How It Works
+    Reinforcement Learning
+    TreatQuest uses Q-Learning, a value-based reinforcement learning method, where the agent learns:
+        Q(s, a) = expected long-term reward for taking action a in state s
+        Through exploration, trial-and-error, and repeated episodes, the agent learns:
+        Which tiles give high reward (treats )
+        Which tiles to avoid (traps ☠️)
+        How to reach the finish efficiently (optimal path)
+        How to adjust after the environment changes (treats disappear after eating)
 
+The game includes multiple levels with increasing complexity.
 # Installation Dependencies
     Please ensure you install the following packages/libraries:
         numpy (pip install numpy)
@@ -55,8 +67,7 @@ TreatQuest/
 # Video Description:
     In the link there is a short video description of our project: 
 
-
-## Contributing
-Pull requests are welcome! For major changes, please open an issue first.
+# Contributing
+    Pull requests are welcome! For major changes, please open an issue first.
 
 
