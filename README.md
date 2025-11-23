@@ -50,7 +50,7 @@ TreatQuest/
         Q(s, a) = expected long-term reward for taking action a in state s
         Through exploration, trial-and-error, and repeated episodes, the agent learns:
         Which tiles give high reward (treats )
-        Which tiles to avoid (traps ☠️)
+        Which tiles to avoid (traps)
         How to reach the finish efficiently (optimal path)
         How to adjust after the environment changes (treats disappear after eating)
 
@@ -69,6 +69,7 @@ The game includes multiple levels with increasing complexity.
 
 # Contributing
     Pull requests are welcome! For major changes, please open an issue first.
+
 
 
 
