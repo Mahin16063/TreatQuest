@@ -328,10 +328,10 @@ def run_visual(level=0, delay=100):
         screen = pygame.display.set_mode((window_width, window_height))
         pygame.display.set_caption(f"TreatQuest: Smart Reality Check - Level {lev}")
 
-        # Initialize Agent
-        # We use alpha=0.5 to update "Ghost" values quickly when detected
+       
+       
         agent = QAgent(env.num_states, env.num_actions, alpha=0.5, gamma=0.9, 
-                       eps_start=0.0, eps_end=0.0, env=env)
+                            eps_start=0.0, eps_end=0.0, env=env)
 
         try:
             loaded_table = np.load(f"q_table_level{lev}.npy")
@@ -347,17 +347,15 @@ def run_visual(level=0, delay=100):
         total_reward = 0
         
         while not done:
-            # 1. Select the best action based on current memory
+           
             action = agent.select_action(current_state)
             
-            # 2. SIMULATE THE OUTCOME (The Reality Check)
-            # Calculate where we would land
+          
             dr, dc = action_deltas[action]
             r, c = env.pet_pos
             nr, nc = r + dr, c + dc
             
-            # Check what is actually at that tile
-            # Default to "empty" (-1 reward) unless we find a treat
+  
             real_reward = -1 
             is_treat = False
             
@@ -371,17 +369,15 @@ def run_visual(level=0, delay=100):
                 elif obj == "#":
                     real_reward = -5
             
-            # Calculate the Next State Index
+        
             next_state_idx = nr * grid_cols + nc
             if not (0 <= nr < grid_rows and 0 <= nc < grid_cols):
                 next_state_idx = current_state # Boundary check (stay same)
 
-            # 3. CALCULATE THE ERROR
-            # What does the agent EXPECT?
+          
             current_q_value = agent.Q[current_state, action]
             
-            # What is the REALITY? (Reward + Value of Next Spot)
-            # If next spot is out of bounds or wall, value is 0. Otherwise max(Q[next])
+            
             if 0 <= nr < grid_rows and 0 <= nc < grid_cols:
                 future_value = np.max(agent.Q[next_state_idx])
             else:
@@ -390,21 +386,17 @@ def run_visual(level=0, delay=100):
             target_value = real_reward + agent.gamma * future_value
             error = target_value - current_q_value
 
-            # 4. DECISION TIME
-            # If the Error is huge and negative (e.g. < -5), it means we expected a Treat (15)
-            # but found Empty (-1). This is a "Ghost".
-            # We UPDATE the Q-table instantly and DO NOT MOVE.
+          
             if error < -5.0:
                 agent.Q[current_state, action] += agent.alpha * error
-                # We continue the loop, which forces the agent to re-select 
-                # the NEW best action immediately.
+                
                 continue 
 
-            # 5. If Error is small (normal pathing), we MOVE.
+            
             next_state, reward, done, info = env.step(action)
             total_reward += reward
             
-            # Standard update to keep path values fresh
+            
             agent.update(current_state, action, reward, next_state, done)
             current_state = next_state
 
