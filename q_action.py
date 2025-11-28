@@ -293,48 +293,50 @@ def train_by_episode(level=0, episodes=15, alpha=0.9, gamma=0.9,
 
 
 def run_visual(level=0, delay=100):
-    """
-    Intakes a completed Q-table and chooses the best course of action
-    """
     pygame.init()
     pygame.mixer.init()
 
     info = pygame.display.Info()
     screen_width = info.current_w
     screen_height = info.current_h
-    pygame.display.set_mode((1, 1)) # Temporary Display
+    pygame.display.set_mode((1, 1)) 
 
-    # Initializing Environemnt #
     env = GridWorldEnv(
         level_files=["levels/level1.txt", "levels/level2.txt", "levels/level3.txt", "levels/level4.txt"],
         asset_dir="assets",
     )
     
+    # Helpers to find next coordinates based on action index
+    # ACTIONS = ["UP", "DOWN", "LEFT", "RIGHT"]
+    action_deltas = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
     for lev in range(level, len(env.level_files)):
         env.reset(lev)
 
-        # new music for each level
-        pygame.mixer.music.stop()
-        play_level_music(lev, volume=0.5)
-
-        # Calculating Screen and Tile Size #
+        # Screen setup
         grid_rows = len(env.grid)
         grid_cols = len(env.grid[0])
         margin = 100
         max_tile_width = (screen_width - margin) // grid_cols
         max_tile_height = (screen_height - margin) // grid_rows
-        new_tile_size = min(max_tile_width, max_tile_height, 64)  # Maximum tile
+        new_tile_size = min(max_tile_width, max_tile_height, 64)
 
         env.TILE_SIZE = new_tile_size
         env._load_assets()
         window_width = grid_cols * env.TILE_SIZE
         window_height = grid_rows * env.TILE_SIZE
         screen = pygame.display.set_mode((window_width, window_height))
-        pygame.display.set_caption("TreatQuest: A Visual Run")
+        pygame.display.set_caption(f"TreatQuest: Smart Reality Check - Level {lev}")
+
+       
+       
+        agent = QAgent(env.num_states, env.num_actions, alpha=0.5, gamma=0.9, 
+                            eps_start=0.0, eps_end=0.0, env=env)
 
         try:
-            q_table = np.load(f"q_table_level{lev}.npy")
-            q_table = np.load(f"q_table_level{lev}.npy")
+            loaded_table = np.load(f"q_table_level{lev}.npy")
+            agent.Q = loaded_table 
+            print(f"Loaded Q-table for Level {lev}")
         except FileNotFoundError:
             print(f"Missing q_table_level{lev}.npy! Train first before running.")
             pygame.quit()
@@ -342,27 +344,75 @@ def run_visual(level=0, delay=100):
         
         current_state = env.get_state()
         done = False
-        steps = 0
-
+        total_reward = 0
+        
         while not done:
-            action = np.argmax(q_table[current_state])
-            next_state, reward, done, info = env.step(action)
-            steps += 1
+           
+            action = agent.select_action(current_state)
+            
+          
+            dr, dc = action_deltas[action]
+            r, c = env.pet_pos
+            nr, nc = r + dr, c + dc
+            
+  
+            real_reward = -1 
+            is_treat = False
+            
+            if 0 <= nr < grid_rows and 0 <= nc < grid_cols:
+                obj = env.objects.get((nr, nc))
+                if obj == "T":
+                    real_reward = 15
+                    is_treat = True
+                elif obj == "X":
+                    real_reward = -15
+                elif obj == "#":
+                    real_reward = -5
+            
+        
+            next_state_idx = nr * grid_cols + nc
+            if not (0 <= nr < grid_rows and 0 <= nc < grid_cols):
+                next_state_idx = current_state # Boundary check (stay same)
 
+          
+            current_q_value = agent.Q[current_state, action]
+            
+            
+            if 0 <= nr < grid_rows and 0 <= nc < grid_cols:
+                future_value = np.max(agent.Q[next_state_idx])
+            else:
+                future_value = 0
+            
+            target_value = real_reward + agent.gamma * future_value
+            error = target_value - current_q_value
+
+          
+            if error < -5.0:
+                agent.Q[current_state, action] += agent.alpha * error
+                
+                continue 
+
+            
+            next_state, reward, done, info = env.step(action)
+            total_reward += reward
+            
+            
+            agent.update(current_state, action, reward, next_state, done)
+            current_state = next_state
+
+            # Render
             screen.fill((0, 0, 0))
             env.render_pygame(screen)
             env.render_ui(screen)
+            env.render_hud(screen, mode="REALITY CHECK", total_reward=total_reward, epsilon=agent.epsilon)
             pygame.display.flip()
             pygame.time.delay(delay)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    pygame.mixer.music.stop()
                     pygame.quit()
                     return
 
-            current_state = env.get_state()
-    pygame.mixer.music.stop()
     pygame.quit()
     print("All levels completed! >^.^<")
 
@@ -621,7 +671,7 @@ def show_menu():
 
     # Load button click sound
     try:
-        click_sound = pygame.mixer.Sound("assets/sounds/click.wav")
+        click_sound = pygame.mixer.Sound("assets/sounds/click.mp3")
         click_sound.set_volume(0.7)
     except Exception as e:
         print("Error loading click sound:", e)
@@ -801,7 +851,6 @@ def show_menu():
         q_surf = font_button.render("?", True, (255, 255, 255))
         q_rect = q_surf.get_rect(center=help_rect.center)
         screen.blit(q_surf, q_rect.topleft)
-
         pygame.display.flip()
         clock.tick(60)
 
@@ -812,7 +861,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--level", type=int, default=0)
     parser.add_argument("--episodes", type=int, default=1000)
-    parser.add_argument("--delay", type=int, default=100)
+    parser.add_argument("--delay", type=int, default=50)
     args = parser.parse_args()
 
     choice = show_menu()
@@ -837,7 +886,7 @@ def main():
         print("\n▶ Starting VISUAL RUN...\n")
         run_visual(
             level=args.level,
-            delay=150
+            delay=args.delay
         )
     elif choice == "4":
         run_manual_play()

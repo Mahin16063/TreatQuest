@@ -439,7 +439,7 @@ class GridWorldEnv:
             reward = 15
             done = True
         elif tile == "trap":
-            reward = -15
+            reward = -50
             done = True
         elif tile == "treat":
             reward = 15
